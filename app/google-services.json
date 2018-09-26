@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "871251398527",
+    "firebase_url": "https://radar-6d6c2.firebaseio.com",
+    "project_id": "radar-6d6c2",
+    "storage_bucket": "radar-6d6c2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:871251398527:android:04ab3469024f32c2",
+        "android_client_info": {
+          "package_name": "com.radarapp.mjr9r.radar"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "871251398527-e2lq9hd6cadv67ko6ksn5t87obufv7ua.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.radarapp.mjr9r.radar",
+            "certificate_hash": "92b23a41383bd85baf102b06fdeac15e1d9b82ec"
+          }
+        },
+        {
+          "client_id": "871251398527-p7kvlo6oprep7ubh10ga2rsaea2qti1f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBItw7tGtIL-eig71vKLP83s2hsgNcHF_w"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "871251398527-p7kvlo6oprep7ubh10ga2rsaea2qti1f.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

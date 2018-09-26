@@ -1,0 +1,291 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.radarapp.mjr9r.radar.fragments.ComposeFragment">
+
+    <TextView
+        android:id="@+id/filter_select_headline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/filter_select_headline"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_alignParentTop="true" />
+
+    <HorizontalScrollView
+        android:id="@+id/compose_scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fillViewport="true"
+        android:measureAllChildren="false"
+        android:scrollbars="none"
+        android:layout_below="@id/filter_select_headline">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="horizontal" >
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_margin="20dp">
+                <ImageView
+                    android:tag="scroll_icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_compose_cute_icon"/>
+                <TextView
+                    android:tag="scroll_label"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/label_cute"
+                    android:layout_marginTop="5dp"
+                    android:textAlignment="center"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_margin="20dp">
+                <ImageView
+                    android:tag="scroll_icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_compose_deal_icon"/>
+                <TextView
+                    android:tag="scroll_label"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/label_deal"
+                    android:layout_marginTop="5dp"
+                    android:textAlignment="center"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_margin="20dp">
+                <ImageView
+                    android:tag="scroll_icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_compose_lol_icon"/>
+                <TextView
+                    android:tag="scroll_label"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/label_lol"
+                    android:layout_marginTop="5dp"
+                    android:textAlignment="center"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_margin="20dp">
+                <ImageView
+                    android:tag="scroll_icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_compose_event_icon"/>
+                <TextView
+                    android:tag="scroll_label"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/label_event"
+                    android:layout_marginTop="5dp"
+                    android:textAlignment="center"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_margin="20dp">
+                <ImageView
+                    android:tag="scroll_icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_compose_educational_icon"/>
+                <TextView
+                    android:tag="scroll_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/label_educational"
+                    android:layout_marginTop="5dp"
+                    android:textAlignment="center"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_margin="20dp">
+                <ImageView
+                    android:tag="scroll_icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_compose_scavenger_icon"/>
+                <TextView
+                    android:tag="scroll_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/label_scavenger"
+                    android:layout_marginTop="5dp"
+                    android:textAlignment="center"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_margin="20dp">
+                <ImageView
+                    android:tag="scroll_icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_compose_yumyum_icon"/>
+                <TextView
+                    android:tag="scroll_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/label_food"
+                    android:layout_marginTop="5dp"
+                    android:textAlignment="center"/>
+            </LinearLayout>
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <android.support.v7.widget.CardView
+        android:id="@+id/sliders_cardview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/compose_scrollView"
+        android:layout_marginBottom="15dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
+        >
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/distance_slider_headline"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:text="@string/distance_slider_headline" />
+
+            <LinearLayout
+                android:id="@+id/duration_slider_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_below="@id/distance_slider_headline">
+
+            <android.support.v7.widget.AppCompatSeekBar
+                android:id="@+id/distance_slider"
+                android:layout_width="285dp"
+                android:layout_height="wrap_content"
+                android:max="5100"
+                android:min="100"
+                android:progress="1000"
+                />
+
+                <TextView
+                    android:id="@+id/distance_slider_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="5dp"
+                    android:layout_marginRight="5dp"
+                    android:text="1000m" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/duration_slider_headline"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:layout_below="@id/duration_slider_container"
+                android:text="@string/duration_slider_headline" />
+
+            <LinearLayout
+                android:id="@+id/distance_slider_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_below="@id/duration_slider_headline">
+
+                <android.support.v7.widget.AppCompatSeekBar
+                    android:id="@+id/duration_slider"
+                    android:layout_width="285dp"
+                    android:layout_height="wrap_content"
+                    android:max="181"
+                    android:min="1"
+                    android:progress="60"
+                    />
+
+                <TextView
+                    android:id="@+id/duration_slider_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="5dp"
+                    android:layout_marginRight="5dp"
+                    android:text="60min" />
+            </LinearLayout>
+
+
+        </RelativeLayout>
+
+
+
+    </android.support.v7.widget.CardView>
+
+    <android.support.v7.widget.CardView
+        android:id="@+id/content_cardview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/sliders_cardview"
+        android:layout_marginHorizontal="5dp"
+        >
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/content_headline"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:text="@string/content_headline" />
+
+            <EditText
+                android:id="@+id/content_text"
+                android:layout_width="match_parent"
+                android:layout_height="190dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:gravity="top"
+                android:inputType="textMultiLine"
+                android:lines="5"
+                android:hint="@string/content_hint"
+                android:layout_below="@id/content_headline"/>
+
+        </RelativeLayout>
+
+    </android.support.v7.widget.CardView>
+
+</RelativeLayout>

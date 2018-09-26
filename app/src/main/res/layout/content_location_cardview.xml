@@ -9,6 +9,7 @@
         android:id="@+id/message_icon"
         android:layout_width="100dp"
         android:layout_height="100dp"
+        android:scaleType="center"
         android:src="@drawable/cute_icon"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -31,8 +32,8 @@
         android:layout_width="117dp"
         android:layout_height="24dp"
         android:layout_marginBottom="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginRight="8dp"
+        android:layout_marginEnd="32dp"
+        android:layout_marginRight="32dp"
         android:layout_marginTop="8dp"
         android:ems="10"
         app:layout_constraintBottom_toTopOf="@+id/message_content"

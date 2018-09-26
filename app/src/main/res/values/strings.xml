@@ -2,9 +2,48 @@
     <string name="app_name">Radar</string>
     <string name="title_activity_maps">Radar</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="quickdrop_hint">Enter a note to drop...</string>
+    <!-- LAYOUT FILES -->
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <!-- Main Fragment Layout Strings -->
+    <string name="quickdrop_hint">Quickdrop a note&#x2026;</string>
+    <string name="refresh_button">NEW MESSAGES</string>
+
+    <!-- Compose Fragment Layout Strings -->
+    <string name="filter_select_headline">Choose a category</string>
+        <!-- Filter Names in Compose -->
+        <string name="label_cute">CUTE</string>
+        <string name="label_deal">DEAL</string>
+        <string name="label_lol">LOL</string>
+        <string name="label_event">EVENT</string>
+        <string name="label_educational">LEARN</string>
+        <string name="label_scavenger">SECRET</string>
+        <string name="label_food">FOOD</string>
+
+    <string name="distance_slider_headline">How far away should your message be seen?</string>
+    <string name="duration_slider_headline">How long should your message be seen?</string>
+    <string name="content_headline">Enter your message here</string>
+    <string name="content_hint">Enter your message&#x2026; \n\n(160 characters max)</string>
+
+
+    <!-- FRAGMENTS -->
+    <!-- Main Fragment Strings -->
+
+
+    <!-- Compose Fragment Strings -->
+    <string name="toast_incomplete">Make sure you have entered a text and selected a category!</string>
+    <string name="distance_unit">m</string>
+    <string name="duration_unit">min</string>
+
+    <!-- DatabaseWriter Strings -->
+    <string name="toast_success">Message dropped successfully!</string>
+
+    <!-- Bottom Navigation Strings-->
+    <string name="menu_map">Map</string>
+    <string name="menu_compose">Compose</string>
+    <string name="menu_bookmarks">Bookmarks</string>
+
+    <!-- Actionbar Strings -->
+    <string name="actionbar_send">Send note</string>
+    <string name="actionbar_settings">Settings</string>
+
 </resources>

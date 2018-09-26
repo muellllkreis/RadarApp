@@ -5,11 +5,13 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 
@@ -19,23 +21,49 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.radarapp.mjr9r.radar.R;
 import com.radarapp.mjr9r.radar.fragments.MainFragment;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationCallback;
+import com.radarapp.mjr9r.radar.helpers.OnBottomNavigationItemSelectedListener;
 
-public class MapsActivity extends FragmentActivity implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
+public class MapsActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
 
     final int PERMISSION_LOCATION = 111;
     private GoogleApiClient mGoogleApiClient;
+
+    final private FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+    public FirebaseFirestore getDb() {
+        return db;
+    }
+
+
     private FusedLocationProviderClient mFusedLocationClient;
 
     private MainFragment mainFragment;
+
+    public BottomNavigationView getmBottomNavigationView() {
+        return mBottomNavigationView;
+    }
+
+    private BottomNavigationView mBottomNavigationView;
+    private BottomNavigationView.OnNavigationItemSelectedListener mBottomNavigationSelectedListener;
+
+    public FusedLocationProviderClient getmFusedLocationClient() {
+        return mFusedLocationClient;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
+        //Create bottom navigation
+        mBottomNavigationView = findViewById(R.id.bottom_navigation);
+        mBottomNavigationSelectedListener = new OnBottomNavigationItemSelectedListener(this);
+        this.setupBottomNavigation(mBottomNavigationView);
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .enableAutoManage(this, this)
@@ -48,7 +76,7 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.On
         mainFragment = (MainFragment) getSupportFragmentManager().findFragmentById(R.id.container_main);
         if(mainFragment == null) {
             mainFragment = MainFragment.newInstance();
-            getSupportFragmentManager().beginTransaction().add(R.id.container_main, mainFragment).commit();
+            getSupportFragmentManager().beginTransaction().add(R.id.container_main, mainFragment, "MAP_FRAGMENT").commit();
         }
 
     }
@@ -129,6 +157,12 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.On
             //Show dialogue to user saying we can't get location unless they give app permissions
             Log.v("SANDWICH", exception.toString());
         }
+    }
+
+
+    // BOTTOM NAVIGATION
+    private void setupBottomNavigation(BottomNavigationView bottomNavigationView) {
+        bottomNavigationView.setOnNavigationItemSelectedListener(mBottomNavigationSelectedListener);
     }
 
 
