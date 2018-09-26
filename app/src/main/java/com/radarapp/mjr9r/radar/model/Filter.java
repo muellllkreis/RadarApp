@@ -15,10 +15,10 @@ public enum Filter {
     CUTE ("CUTE"),
     DEAL ("DEAL"),
     LOL ("LOL"),
-    EDUCATIONAL ("EDUCATIONAL"),
+    LEARN ("LEARN"),
     EVENT ("EVENT"),
-    SCAVENGER ("SCAVENGER"),
-    YUMYUM ("YUMYUM");
+    SECRET ("SECRET"),
+    FOOD ("FOOD");
 
     private final String name;
     private final String color;
@@ -30,28 +30,28 @@ public enum Filter {
 
         switch(name) {
             case "CUTE":
-                this.iconID = R.drawable.cute_icon;
+                this.iconID = R.drawable.ic_bottomsheet_cute_icon;
                 break;
             case "DEAL":
-                this.iconID = R.drawable.deal_icon;
+                this.iconID = R.drawable.ic_bottomsheet_deal_icon;
                 break;
             case "LOL":
-                this.iconID = R.drawable.lol_icon;
+                this.iconID = R.drawable.ic_bottomsheet_lol_icon;
                 break;
-            case "EDUCATIONAL":
-                this.iconID = R.drawable.education_icon;
+            case "LEARN":
+                this.iconID = R.drawable.ic_bottomsheet_educational_icon;
                 break;
             case "EVENT":
-                this.iconID = R.drawable.event_icon;
+                this.iconID = R.drawable.ic_bottomsheet_event_icon;
                 break;
-            case "SCAVENGER":
-                this.iconID = R.drawable.scavenger_icon;
+            case "SECRET":
+                this.iconID = R.drawable.ic_bottomsheet_scavenger_icon;
                 break;
-            case "YUMYUM":
-                this.iconID = R.drawable.food_icon;
+            case "FOOD":
+                this.iconID = R.drawable.ic_bottomsheet_yumyum_icon;
                 break;
             default:
-                this.iconID = R.drawable.lol_icon;
+                this.iconID = R.drawable.ic_bottomsheet_lol_icon;
                 break;
         }
     }
@@ -64,13 +64,13 @@ public enum Filter {
                 return "#E8CA4D";
             case "LOL":
                 return "#E8A051";
-            case "EDUCATIONAL":
+            case "LEARN":
                 return "#FF6B47";
             case "EVENT":
                 return "#718DE8";
-            case "SCAVENGER":
+            case "SECRET":
                 return "#705549";
-            case "YUMYUM":
+            case "FOOD":
                 return "#478A46";
             default:
                 return "#FFFFFF";
@@ -85,13 +85,13 @@ public enum Filter {
                 return BitmapDescriptorFactory.HUE_YELLOW;
             case "LOL":
                 return BitmapDescriptorFactory.HUE_RED;
-            case "EDUCATIONAL":
+            case "LEARN":
                 return BitmapDescriptorFactory.HUE_ORANGE;
             case "EVENT":
                 return BitmapDescriptorFactory.HUE_BLUE;
-            case "SCAVENGER":
-                return BitmapDescriptorFactory.HUE_ORANGE;
-            case "YUMYUM":
+            case "SECRET":
+                return BitmapDescriptorFactory.HUE_VIOLET;
+            case "FOOD":
                 return BitmapDescriptorFactory.HUE_GREEN;
             default:
                 return BitmapDescriptorFactory.HUE_ROSE;

@@ -15,6 +15,7 @@ public class DropMessage {
     private Filter filter;
     private double duration;
     private double distance;
+    private long unixTime;
 
     public DropMessage(float latitude, float longitude, Date date, String content, Filter filter) {
         this.latitude = latitude;
@@ -22,6 +23,14 @@ public class DropMessage {
         this.date = date;
         this.content = content;
         this.filter = filter;
+        this.unixTime = date.getTime()/1000;
+    }
+
+    @Override
+    public String toString() {
+        return "LAT: " + this.latitude + "- LONG: " + this.longitude + "\n" +
+                "DATE: " + this.date + "\n" +
+                this.content + " ---- " + this.filter.getName();
     }
 
     public float getLatitude() {
@@ -51,5 +60,7 @@ public class DropMessage {
     public double getDistance() {
         return distance;
     }
+
+    public long getUnixTime() { return unixTime; }
 
 }

@@ -1,45 +1,50 @@
 package com.radarapp.mjr9r.radar.fragments;
 
 
+import android.app.Activity;
 import android.content.Context;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomSheetBehavior;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.RecyclerView;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AccelerateDecelerateInterpolator;
-import android.view.animation.Interpolator;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.radarapp.mjr9r.radar.R;
+import com.radarapp.mjr9r.radar.activities.MapsActivity;
+import com.radarapp.mjr9r.radar.services.DatabaseWriter;
+import com.radarapp.mjr9r.radar.helpers.TimeAgo;
 import com.radarapp.mjr9r.radar.model.DropMessage;
 import com.radarapp.mjr9r.radar.model.Filter;
 import com.radarapp.mjr9r.radar.services.DataService;
-
-import org.w3c.dom.Text;
+import com.radarapp.mjr9r.radar.services.MessageFetchCallback;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.List;
 
 
 /**
@@ -49,6 +54,10 @@ import java.util.HashMap;
  */
 public class MainFragment extends Fragment implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener, GoogleMap.OnMapClickListener {
 
+    public GoogleMap getmMap() {
+        return mMap;
+    }
+
     private GoogleMap mMap;
     private MarkerOptions userMarker;
 
@@ -56,6 +65,8 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
     private BottomSheetBehavior mBottomSheetBehavior;
     private View bottomsheet;
     private boolean bottomSheetVisible;
+
+    FloatingActionButton fab;
 
     public MainFragment() {
         // Required empty public constructor
@@ -81,24 +92,85 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        //HIER will ich Quickdrop einbauen
-        final EditText quickdrop = (EditText) view.findViewById(R.id.quickdrop_edit);
-        quickdrop.setOnKeyListener(new View.OnKeyListener() {
+        //Floating Action Button
+        fab = view.findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
             @Override
-            public boolean onKey(View v, int keyCode, KeyEvent event) {
-                if((event.getAction() == KeyEvent.ACTION_DOWN) && keyCode == KeyEvent.KEYCODE_ENTER) {
+            public void onClick(View view) {
+                FragmentManager fm = getActivity().getSupportFragmentManager();
+                FragmentTransaction ft ;
+                if (fm.findFragmentByTag("COMPOSE_FRAGMENT") == null) {
+                    ft = fm.beginTransaction();
+                    ft.add(R.id.container_main, ComposeFragment.newInstance(), "COMPOSE_FRAGMENT").commit();
+                    fm.executePendingTransactions();
+                    ft = fm.beginTransaction();
+                    ft.show(fm.findFragmentByTag("COMPOSE_FRAGMENT"));
+                    ft.hide(fm.findFragmentByTag("MAP_FRAGMENT"));
+                    ft.commit();
+                    ((MapsActivity) getActivity()).getmBottomNavigationView().setSelectedItemId(R.id.bottom_nav_compose);
+                }
+                else {
+                    ft = fm.beginTransaction();
+                    ft.show(fm.findFragmentByTag("COMPOSE_FRAGMENT"));
+                    ft.hide(fm.findFragmentByTag("MAP_FRAGMENT"));
+                    ft.commit();
+                    ((MapsActivity) getActivity()).getmBottomNavigationView().setSelectedItemId(R.id.bottom_nav_compose);
+                }
+            }
+        });
+
+
+        //THE FOLLOWING CODE HANDLES QUICKDROP
+        final EditText quickdrop = (EditText) view.findViewById(R.id.quickdrop_edit);
+        final ImageButton quickDropBtn = view.findViewById(R.id.quickdrop_send);
+
+        quickDropBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                    Log.v("QUICKDROP", "Registered Return Key");
                     String content = quickdrop.getText().toString();
 
                     //Hide Keyboard
                     InputMethodManager mInputMethodManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-                    mInputMethodManager.hideSoftInputFromInputMethod(quickdrop.getWindowToken(), 0);
+                    mInputMethodManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+
+                    quickdrop.setText("");
+                    quickdrop.clearFocus();
+                    getActivity().findViewById(R.id.container_main).requestFocus();
 
                     //CREATE MARKER METHOD
+                    quickDropMessage(content);
                     //DROP IT ON MAP
                 }
-                return false;
+        });
+
+        quickdrop.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (s.length()>0 && s.subSequence(s.length()-1, s.length()).toString().equalsIgnoreCase("\n")) {
+                    quickDropBtn.performClick();
+                    //HIDE KEYBOARD
+                    InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Activity.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(quickdrop.getWindowToken(), 0);
+                    quickdrop.setText("");
+                    quickdrop.clearFocus();
+                    getActivity().findViewById(R.id.container_main).requestFocus();
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
             }
         });
+
+        //LISTEN FOR CHANGES IN DATABASE
+        DataService.getInstance().listenForMessageUpdates(getActivity(), getContext());
 
         return view;
     }
@@ -106,7 +178,6 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
 
         if(mBottomSheetBehavior == null) {
             bottomsheet = getView().findViewById(R.id.bottom_sheet);
@@ -132,6 +203,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
         mMap = googleMap;
         mMap.setOnMarkerClickListener(this);
         mMap.setOnMapClickListener(this);
+        mMap.getUiSettings().setMyLocationButtonEnabled(false);
         try {
             mMap.setMyLocationEnabled(true);
         } catch (SecurityException exception) {
@@ -151,16 +223,22 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
     }
 
     private void updateMap() {
-        ArrayList<DropMessage> locations = DataService.getInstance().getSampleMessages();
-
-        for(int x = 0; x < locations.size(); x++) {
-            DropMessage dm = locations.get(x);
-            Marker marker = mMap.addMarker(new MarkerOptions()
-                                .position(new LatLng(dm.getLatitude(), dm.getLongitude()))
-                                .title(dm.getFilter().getName()));
-            marker.setTag(dm);
-            marker.setIcon(BitmapDescriptorFactory.defaultMarker(this.getMarkerColor(dm.getFilter())));
-        }
+        DataService.getInstance()
+                .getInitialMessages(new MessageFetchCallback() {
+            @Override
+            public void onCallback(List<DropMessage> messageList) {
+                for(int x = 0; x < messageList.size(); x++) {
+                    Log.v("UPDATEMAP", messageList.get(x).getContent());
+                    DropMessage dm = messageList.get(x);
+                    Marker marker = mMap.addMarker(new MarkerOptions()
+                            .position(new LatLng(dm.getLatitude(), dm.getLongitude()))
+                            .title(dm.getFilter().getName()));
+                    marker.setTag(dm);
+                    marker.setIcon(BitmapDescriptorFactory.defaultMarker(MainFragment.getMarkerColor(dm.getFilter())));
+                }
+            }
+        },
+        getActivity());
     }
 
     @Override
@@ -169,7 +247,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
         //cardView = LayoutInflater.from(this.getContext()).inflate(R.layout.content_location_cardview,  null);
         Log.v("OHOH", "KLICK AUF MARKER");
         mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-        mBottomSheetBehavior.setPeekHeight(300);
+        mBottomSheetBehavior.setPeekHeight(500);
         bottomSheetVisible = true;
 
         //get message associated with marker
@@ -178,6 +256,9 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
         String dmContent = dm.getContent();
         Date dmDate = dm.getDate();
 
+        //get "xyz seconds/minutes/hours... ago" string
+        String timeFromNow = TimeAgo.toDuration(new Date().getTime() - dmDate.getTime());
+
         //set bottomview according to marker content
         TextView filterText = bottomsheet.findViewById(R.id.message_filter);
         TextView contentText = bottomsheet.findViewById(R.id.message_content);
@@ -185,9 +266,11 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
         ImageView messageIcon = bottomsheet.findViewById(R.id.message_icon);
         filterText.setText(dmFilter.getName());
         contentText.setText(dmContent);
-        dateText.setText(dmDate.toString());
-        messageIcon.setImageBitmap(BitmapFactory.decodeResource(getResources(), dmFilter.getIconID()));
-        bottomsheet.setBackgroundColor(Color.parseColor(dmFilter.getColor()));
+        dateText.setText(timeFromNow);
+        messageIcon.setImageResource(dmFilter.getIconID());
+        //messageIcon.setImageBitmap(BitmapFactory.decodeResource(getResources(), dmFilter.getIconID()));
+
+        //bottomsheet.setBackgroundColor(Color.parseColor(dmFilter.getColor()));
 
         // return true hides info window from appearing, maybe later we need to change this to
         // false
@@ -203,8 +286,43 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
         //else new quickdrop?
     }
 
-    private float getMarkerColor(Filter filter) {
+    public static float getMarkerColor(Filter filter) {
         return Filter.chooseMarkerColor(filter.getName());
+    }
+
+    private void quickDropMessage(final String content) {
+        FusedLocationProviderClient locationClient = ((MapsActivity) getActivity()).getmFusedLocationClient();
+        try {
+            Log.v("QUICKDROP", "IN TRY BLOCK");
+            locationClient.getLastLocation().addOnSuccessListener(this.getActivity(), new OnSuccessListener<Location>() {
+                        @Override
+                        public void onSuccess(Location location) {
+                            if(location != null) {
+                                DropMessage dm = new DropMessage((float) location.getLatitude(),
+                                        (float) location.getLongitude(),
+                                        new Date(),
+                                        content,
+                                        Filter.CUTE);
+
+                                Marker marker = mMap.addMarker(new MarkerOptions()
+                                        .position(new LatLng(dm.getLatitude(), dm.getLongitude()))
+                                        .title(dm.getFilter().getName()));
+                                Log.v("QUICKDROP", marker.getTitle());
+                                marker.setTag(dm);
+                                marker.setIcon(BitmapDescriptorFactory.defaultMarker(MainFragment.getMarkerColor(dm.getFilter())));
+
+                                //CALL HELPER CLASS TO WRITE TO DB
+                                DatabaseWriter.storeMessageInDatabase(dm, getActivity(), getContext());
+                            }
+                            else {
+                                //SOMETHING BAD HAPPENED HERE
+                            }
+                        }
+                    });
+        } catch(SecurityException e) {
+            //Message error that location is not known
+            return;
+        }
     }
 
 }
