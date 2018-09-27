@@ -8,6 +8,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.MenuItem;
 
+import com.radarapp.mjr9r.radar.fragments.BookmarkFragment;
 import com.radarapp.mjr9r.radar.fragments.ComposeFragment;
 import com.radarapp.mjr9r.radar.R;
 import com.radarapp.mjr9r.radar.activities.MapsActivity;
@@ -81,8 +82,29 @@ public class OnBottomNavigationItemSelectedListener implements BottomNavigationV
                 ft.commit();
                 return true;
             case R.id.bottom_nav_bookmark:
-                Log.v("BOTTOMNAV", "Click on Bookmarks");
-                break;
+                //CHECK IF FRAGMENT HAS BEEN ADDED YET, IF NOT, ADD IT
+                if (fm.findFragmentByTag("BOOKMARK_FRAGMENT") == null) {
+                    ft = fm.beginTransaction();
+                    ft.add(R.id.container_main, BookmarkFragment.newInstance(1), "BOOKMARK_FRAGMENT").commit();
+                    fm.executePendingTransactions();
+                    ft = fm.beginTransaction();
+                    ft.show(fm.findFragmentByTag("BOOKMARK_FRAGMENT"));
+                    ft.hide(currentFragment);
+                    ft.commit();
+                    break;
+                }
+                //CHECK IF SAME VIEW HAS BEEN CLICKED AGAIN, IF YES, BREAK
+                if(fm.findFragmentByTag("BOOKMARK_FRAGMENT").isVisible()) {
+                    break;
+                }
+                //HIDE CURRENT FRAGMENT, SHOW FRAGMENT THAT HAS BEEN SELECTED
+                ft = fm.beginTransaction();
+                ft.show(fm.findFragmentByTag("BOOKMARK_FRAGMENT"));
+                ft.hide(currentFragment);
+                ft.commit();
+                return true;
+//                Log.v("BOTTOMNAV", "Click on Bookmarks");
+//                break;
         }
         return false;
     }

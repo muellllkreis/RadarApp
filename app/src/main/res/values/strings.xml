@@ -8,6 +8,10 @@
     <string name="quickdrop_hint">Quickdrop a note&#x2026;</string>
     <string name="refresh_button">NEW MESSAGES</string>
 
+    <!-- BottomSheet Message details -->
+    <string name="bookmark_button">BOOKMARK THIS</string>
+    <string name="navigate_button">TAKE ME THERE</string>
+
     <!-- Compose Fragment Layout Strings -->
     <string name="filter_select_headline">Choose a category</string>
         <!-- Filter Names in Compose -->
@@ -46,4 +50,6 @@
     <string name="actionbar_send">Send note</string>
     <string name="actionbar_settings">Settings</string>
 
+    <!-- SHARED PREFERENCES -->
+    <string name="shared_prefs_bookmarks">com.radarapp.radar.PREFERENCE_BOOKMARKS</string>
 </resources>
