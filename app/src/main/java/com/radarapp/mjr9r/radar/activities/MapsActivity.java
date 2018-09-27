@@ -1,6 +1,7 @@
 package com.radarapp.mjr9r.radar.activities;
 
 import android.Manifest;
+import android.arch.persistence.room.Room;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.support.annotation.NonNull;
@@ -22,7 +23,9 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.radarapp.mjr9r.radar.Database.AppDatabase;
 import com.radarapp.mjr9r.radar.R;
+import com.radarapp.mjr9r.radar.fragments.BookmarkFragment;
 import com.radarapp.mjr9r.radar.fragments.MainFragment;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationCallback;
@@ -39,6 +42,11 @@ public class MapsActivity extends AppCompatActivity implements GoogleApiClient.O
         return db;
     }
 
+    public AppDatabase getLocalDb() {
+        return localDb;
+    }
+
+    private AppDatabase localDb;
 
     private FusedLocationProviderClient mFusedLocationClient;
 
@@ -78,6 +86,10 @@ public class MapsActivity extends AppCompatActivity implements GoogleApiClient.O
             mainFragment = MainFragment.newInstance();
             getSupportFragmentManager().beginTransaction().add(R.id.container_main, mainFragment, "MAP_FRAGMENT").commit();
         }
+
+        //GET DATABASE OBJECT
+        localDb = Room.databaseBuilder(getApplicationContext(),
+                AppDatabase.class, "database").build();
 
     }
 

@@ -2,7 +2,12 @@ package com.radarapp.mjr9r.radar.fragments;
 
 
 import android.app.Activity;
+import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModel;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -15,9 +20,12 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -33,6 +41,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.radarapp.mjr9r.radar.Database.MessageDao;
 import com.radarapp.mjr9r.radar.R;
 import com.radarapp.mjr9r.radar.activities.MapsActivity;
 import com.radarapp.mjr9r.radar.services.DatabaseWriter;
@@ -45,6 +54,8 @@ import com.radarapp.mjr9r.radar.services.MessageFetchCallback;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 
 /**
@@ -80,6 +91,13 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.actiobar_main, menu);
     }
 
     @Override
@@ -251,7 +269,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
         bottomSheetVisible = true;
 
         //get message associated with marker
-        DropMessage dm = (DropMessage) marker.getTag();
+        final DropMessage dm = (DropMessage) marker.getTag();
         Filter dmFilter = dm.getFilter();
         String dmContent = dm.getContent();
         Date dmDate = dm.getDate();
@@ -274,6 +292,58 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
 
         // return true hides info window from appearing, maybe later we need to change this to
         // false
+
+        // set buttons in bottomsheet
+        final Button bookmarkBtn = bottomsheet.findViewById(R.id.bookmark_button);
+
+        // check if message has already been bookmarked
+        // if not, set clicklistener
+        if(hasBeenBookmarked(dm)) {
+            bookmarkBtn.setText("BOOKMARKED");
+            bookmarkBtn.setActivated(false);
+            Drawable img = getContext().getResources().getDrawable( R.drawable.ic_bookmark_white_24dp );
+            bookmarkBtn.setCompoundDrawablesWithIntrinsicBounds( img, null, null, null );
+        }
+        bookmarkBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final MessageDao messageDao = ((MapsActivity) getActivity()).getLocalDb().messageDao();
+                Executor executor = Executors.newSingleThreadExecutor();
+                executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.v("DATABASE_LISTENER", "IN RUN: " + Boolean.toString(hasBeenBookmarked(dm)));
+                        if(hasBeenBookmarked(dm)) {
+//                            Log.v("DATABASE_LISTENER", "PERFORMING DELETE");
+//                            synchronized (messageDao) {
+//                                messageDao.delete(dm);
+//                            }
+                        }
+                        else {
+                            Log.v("DATABASE_LISTENER", "PERFORMING INSERT");
+                            synchronized (messageDao) {
+                                messageDao.insertAll(dm);
+                            }
+                        }
+                    }
+                });
+                Log.v("DATABASE_LISTENER", "OUTSIDE RUN: " + Boolean.toString(hasBeenBookmarked(dm)));
+                if(hasBeenBookmarked(dm)) {
+//                    bookmarkBtn.setText(R.string.bookmark_button);
+//                    Drawable changedIcon = getContext().getResources().getDrawable(R.drawable.ic_bookmark_border_white_24dp);
+//                    changedIcon.setBounds(24,24,24,24);
+//                    bookmarkBtn.setCompoundDrawables(changedIcon, null, null, null);
+//                    setBookmarkStatus(dm, false);
+                }
+                else {
+                    bookmarkBtn.setText("BOOKMARKED");
+                    Drawable img = getContext().getResources().getDrawable(R.drawable.ic_bookmark_white_24dp);
+                    img.setBounds(24,24,24,24);
+                    bookmarkBtn.setCompoundDrawables(img, null, null, null);
+                    setBookmarkStatus(dm, true);
+                }
+            }
+        });
         return true;
     }
 
@@ -325,4 +395,17 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
         }
     }
 
+    private boolean hasBeenBookmarked(DropMessage dm) {
+        Context context = getActivity();
+        SharedPreferences sharedPref = context.getSharedPreferences(
+                getString(R.string.shared_prefs_bookmarks), Context.MODE_PRIVATE);
+        return sharedPref.getBoolean(dm.getDmId().toString(), false);
+    }
+
+    private void setBookmarkStatus(DropMessage dm, boolean status) {
+        Context context = getActivity();
+        SharedPreferences sharedPref = context.getSharedPreferences(
+                getString(R.string.shared_prefs_bookmarks), Context.MODE_PRIVATE);
+        sharedPref.edit().putBoolean(dm.getDmId().toString(), status).apply();
+    }
 }

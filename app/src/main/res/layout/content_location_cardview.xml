@@ -61,4 +61,44 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.079" />
 
+    <Button
+        android:id="@+id/bookmark_button"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginLeft="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="24dp"
+        android:background="@drawable/refresh_button"
+        android:drawableLeft="@drawable/ic_bookmark_border_white_24dp"
+        android:drawablePadding="10dp"
+        android:padding="10dp"
+        android:text="@string/bookmark_button"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/message_icon" />
+
+    <Button
+        android:id="@+id/navigate_button"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginEnd="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="24dp"
+        android:background="@drawable/refresh_button"
+        android:drawableLeft="@drawable/ic_directions_white_24dp"
+        android:drawablePadding="10dp"
+        android:padding="10dp"
+        android:text="@string/navigate_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.777"
+        app:layout_constraintStart_toEndOf="@+id/bookmark_button"
+        app:layout_constraintTop_toBottomOf="@+id/message_icon" />
+
 </android.support.constraint.ConstraintLayout>
