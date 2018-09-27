@@ -1,0 +1,30 @@
+URI:
+https://firestore.googleapis.com/v1beta1/projects/radar-6d6c2/databases/(default)/documents/messages?documentId=6001156905205
+
+Content:
+{
+  fields: {
+    date: { "timestampValue": "2019-10-02T15:01:23.045123456Z" },
+    duration: { "integerValue": "0" },
+	distance: { "integerValue": "0" },
+	filter: { "stringValue": "DEAL" },
+	unixTime: { "doubleValue": 1637961526 },
+	latitude: { "doubleValue": 52.52779 },
+	longitude: { "doubleValue": 13.329106 },
+	content: { "stringValue": "Hier geht es zum Einkaufen hin!" },
+  }
+}
+
+Oder:
+{
+  fields: {
+    date: { "timestampValue": "2018-10-02T15:01:23.045123456Z" },
+    duration: { "integerValue": "0" },
+	distance: { "integerValue": "0" },
+	filter: { "stringValue": "LEARN" },
+	unixTime: { "doubleValue": 1637961526 },
+	latitude: { "doubleValue": 52.530635 },
+	longitude: { "doubleValue": 13.318491  },
+	content: { "stringValue": "Coole Autos!" },
+  }
+}
