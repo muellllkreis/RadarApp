@@ -31,7 +31,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationCallback;
 import com.radarapp.mjr9r.radar.helpers.OnBottomNavigationItemSelectedListener;
 
-public class MapsActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
+public class MapsActivity extends AppCompatActivity implements MainFragment.RefreshInterface, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
 
     final int PERMISSION_LOCATION = 111;
     private GoogleApiClient mGoogleApiClient;
@@ -177,5 +177,12 @@ public class MapsActivity extends AppCompatActivity implements GoogleApiClient.O
         bottomNavigationView.setOnNavigationItemSelectedListener(mBottomNavigationSelectedListener);
     }
 
-
+    @Override
+    public void refreshAdapterBookmarkFragment() {
+        if (getSupportFragmentManager().findFragmentByTag("BOOKMARK_FRAGMENT") != null) {
+            BookmarkFragment fragment = (BookmarkFragment) getSupportFragmentManager().findFragmentByTag("BOOKMARK_FRAGMENT");
+            fragment.refreshAdapter();
+            Log.v("DATABASE_LISTENER", "REFRESHED ADAPTER");
+        }
+    }
 }

@@ -3,4 +3,20 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+
+    <color name="cute">#EC407A</color>
+    <color name="deal">#FFEB3B</color>
+    <color name="lol">#F44336</color>
+    <color name="learn">#F7931E</color>
+    <color name="event">#2196F3</color>
+    <color name="secret">#9C27B0</color>
+    <color name="food">#4CAF50</color>
+
+    <color name="transp_cute">#22EC407A</color>
+    <color name="transp_deal">#22FFEB3B</color>
+    <color name="transp_lol">#22F44336</color>
+    <color name="transp_learn">#22F7931E</color>
+    <color name="transp_event">#222196F3</color>
+    <color name="transp_secret">#229C27B0</color>
+    <color name="transp_food">#224CAF50</color>
 </resources>

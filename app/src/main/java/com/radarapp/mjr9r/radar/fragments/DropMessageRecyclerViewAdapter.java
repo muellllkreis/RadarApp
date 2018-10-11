@@ -18,8 +18,12 @@ import java.util.List;
 
 public class DropMessageRecyclerViewAdapter extends RecyclerView.Adapter<DropMessageRecyclerViewAdapter.ViewHolder> {
 
-    private final List<DropMessage> mValues;
+    private List<DropMessage> mValues;
     private final OnListFragmentInteractionListener mListener;
+
+    public void setmValues(List<DropMessage> mValues) {
+        this.mValues = mValues;
+    }
 
     public DropMessageRecyclerViewAdapter(List<DropMessage> items, OnListFragmentInteractionListener listener) {
         mValues = items;

@@ -98,6 +98,69 @@ public enum Filter {
         }
     }
 
+    public static int chooseCircleStrokeColor(String filter) {
+        switch(filter) {
+            case "CUTE":
+                return R.color.cute;
+            case "DEAL":
+                return R.color.deal;
+            case "LOL":
+                return R.color.lol;
+            case "LEARN":
+                return R.color.learn;
+            case "EVENT":
+                return R.color.event;
+            case "SECRET":
+                return R.color.secret;
+            case "FOOD":
+                return R.color.food;
+            default:
+                return R.color.cute;
+        }
+    }
+
+    public static int chooseCircleFillColor(String filter) {
+        switch(filter) {
+            case "CUTE":
+                return R.color.transp_cute;
+            case "DEAL":
+                return R.color.transp_deal;
+            case "LOL":
+                return R.color.transp_lol;
+            case "LEARN":
+                return R.color.transp_learn;
+            case "EVENT":
+                return R.color.transp_event;
+            case "SECRET":
+                return R.color.transp_secret;
+            case "FOOD":
+                return R.color.transp_food;
+            default:
+                return R.color.transp_cute;
+        }
+    }
+
+    public static int chooseMarkerIcon(String filter) {
+        switch(filter) {
+            case "CUTE":
+                return R.drawable.ic_marker_cute;
+            case "DEAL":
+                return R.drawable.ic_marker_deal;
+            case "LOL":
+                return R.drawable.ic_marker_lol;
+            case "LEARN":
+                return R.drawable.ic_marker_educational;
+            case "EVENT":
+                return R.drawable.ic_marker_event;
+            case "SECRET":
+                return R.drawable.ic_marker_scavenger;
+            case "FOOD":
+                return R.drawable.ic_marker_yumyum;
+            default:
+                return R.drawable.ic_marker_cute;
+        }
+    }
+
     public String getName() {
         return name;
     }

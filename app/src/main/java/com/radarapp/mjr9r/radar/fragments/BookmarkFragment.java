@@ -8,6 +8,8 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -34,6 +36,7 @@ public class BookmarkFragment extends Fragment {
     // TODO: Customize parameters
     private int mColumnCount = 1;
     private OnListFragmentInteractionListener mListener;
+    private DropMessageRecyclerViewAdapter adapter;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -59,6 +62,14 @@ public class BookmarkFragment extends Fragment {
         if (getArguments() != null) {
             mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
         }
+
+        setHasOptionsMenu(true);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.actiobar_main, menu);
     }
 
     @Override
@@ -75,11 +86,16 @@ public class BookmarkFragment extends Fragment {
             } else {
                 recyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
             }
-            recyclerView.setAdapter(new DropMessageRecyclerViewAdapter(getSavedMessages(), mListener));
+            adapter = new DropMessageRecyclerViewAdapter(getSavedMessages(), mListener);
+            recyclerView.setAdapter(adapter);
         }
         return view;
     }
 
+    public void refreshAdapter() {
+        this.adapter.setmValues(getSavedMessages());
+        this.adapter.notifyDataSetChanged();
+    }
 
     @Override
     public void onAttach(Context context) {
@@ -114,6 +130,7 @@ public class BookmarkFragment extends Fragment {
     }
 
     public List<DropMessage> getSavedMessages() {
+        Log.v("DATABASE_LISTENER", "FETCHING SAVED MESSAGES");
         final List<DropMessage> dropMessages = new ArrayList<>();
 
         final MessageDao messageDao = ((MapsActivity) getActivity()).getLocalDb().messageDao();
@@ -124,6 +141,10 @@ public class BookmarkFragment extends Fragment {
                 dropMessages.addAll(((MapsActivity) getActivity()).getLocalDb().messageDao().getAll());
             }
         });
+        for(DropMessage dm: dropMessages) {
+            Log.v("DATABASE_LISTENER", dm.toString());
+        }
+        Log.v("DATABASE_LISTENER", "DONE FETCHING " + dropMessages.size() +  " MESSAGES");
         return dropMessages;
     }
 

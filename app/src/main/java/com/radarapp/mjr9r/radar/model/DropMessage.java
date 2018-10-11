@@ -1,6 +1,7 @@
 package com.radarapp.mjr9r.radar.model;
 
 import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
 
@@ -27,6 +28,9 @@ public class DropMessage {
     private double distance;
     private long unixTime;
 
+    private String uuid;
+
+    @Ignore
     public DropMessage(float latitude, float longitude, Date date, String content, Filter filter) {
         this.dmId = UUID.randomUUID();
         this.latitude = latitude;
@@ -35,9 +39,28 @@ public class DropMessage {
         this.content = content;
         this.filter = filter;
         this.unixTime = date.getTime()/1000;
+        this.uuid = this.dmId.toString();
     }
 
-    public DropMessage(String uuid, float latitude, float longitude, Date date, String content, Filter filter) {
+    public DropMessage(UUID id, float latitude, float longitude, Date date, String content, Filter filter, double distance, double duration) {
+        if(id == null) {
+            this.dmId = UUID.randomUUID();
+        }
+        else {
+            this.dmId = id;
+        }
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.date = date;
+        this.content = content;
+        this.filter = filter;
+        this.unixTime = date.getTime()/1000;
+        this.distance = distance;
+        this.duration = duration;
+        this.uuid = this.dmId.toString();
+    }
+
+    public DropMessage(String uuid, float latitude, float longitude, Date date, String content, Filter filter, double distance, double duration) {
         this.dmId = UUID.fromString(uuid);
         this.latitude = latitude;
         this.longitude = longitude;
@@ -45,6 +68,9 @@ public class DropMessage {
         this.content = content;
         this.filter = filter;
         this.unixTime = date.getTime()/1000;
+        this.distance = distance;
+        this.duration = duration;
+        this.uuid = uuid;
     }
 
     @Override
@@ -122,6 +148,14 @@ public class DropMessage {
 
     public void setUnixTime(long unixTime) {
         this.unixTime = unixTime;
+    }
+
+    public String getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
     }
 
 }

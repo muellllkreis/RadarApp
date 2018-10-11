@@ -14,14 +14,14 @@
 
     <!-- Compose Fragment Layout Strings -->
     <string name="filter_select_headline">Choose a category</string>
-        <!-- Filter Names in Compose -->
-        <string name="label_cute">CUTE</string>
-        <string name="label_deal">DEAL</string>
-        <string name="label_lol">LOL</string>
-        <string name="label_event">EVENT</string>
-        <string name="label_educational">LEARN</string>
-        <string name="label_scavenger">SECRET</string>
-        <string name="label_food">FOOD</string>
+    <!-- Filter Names in Compose -->
+    <string name="label_cute">CUTE</string>
+    <string name="label_deal">DEAL</string>
+    <string name="label_lol">LOL</string>
+    <string name="label_event">EVENT</string>
+    <string name="label_educational">LEARN</string>
+    <string name="label_scavenger">SECRET</string>
+    <string name="label_food">FOOD</string>
 
     <string name="distance_slider_headline">How far away should your message be seen?</string>
     <string name="duration_slider_headline">How long should your message be seen?</string>
@@ -52,4 +52,7 @@
 
     <!-- SHARED PREFERENCES -->
     <string name="shared_prefs_bookmarks">com.radarapp.radar.PREFERENCE_BOOKMARKS</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

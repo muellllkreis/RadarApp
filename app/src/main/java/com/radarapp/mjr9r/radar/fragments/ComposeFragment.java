@@ -2,6 +2,7 @@ package com.radarapp.mjr9r.radar.fragments;
 
 
 import android.animation.ObjectAnimator;
+import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.location.Location;
 import android.os.Bundle;
@@ -32,6 +33,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.radarapp.mjr9r.radar.R;
 import com.radarapp.mjr9r.radar.activities.MapsActivity;
+import com.radarapp.mjr9r.radar.helpers.BitmapHelper;
+import com.radarapp.mjr9r.radar.helpers.DropAnimator;
 import com.radarapp.mjr9r.radar.services.DatabaseWriter;
 import com.radarapp.mjr9r.radar.helpers.ViewTagHelper;
 import com.radarapp.mjr9r.radar.model.DropMessage;
@@ -41,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 
 /**
@@ -60,6 +64,8 @@ public class ComposeFragment extends Fragment {
     private TextView distanceValue;
     private TextView durationValue;
     private EditText contentText;
+    private SeekBar distanceBar;
+    private SeekBar durationBar;
 
 
     public ComposeFragment() {
@@ -123,11 +129,14 @@ public class ComposeFragment extends Fragment {
                         public void onSuccess(Location location) {
                             if(location != null) {
                                 //CREATE DROPMESSAGE FROM VIEWS IN FRAGMENT
-                                DropMessage dm = new DropMessage((float) location.getLatitude(),
+                                DropMessage dm = new DropMessage(UUID.randomUUID(),
+                                        (float) location.getLatitude(),
                                         (float) location.getLongitude(),
                                         new Date(),
                                         contentText.getText().toString(),
-                                        Filter.valueOf(currentlySelectedFilter));
+                                        Filter.valueOf(currentlySelectedFilter),
+                                        (double) distanceBar.getProgress(),
+                                        (double) durationBar.getProgress());
 
                                 //ADD MARKER TO MAPFRAGMENT
                                 FragmentManager fm = getActivity().getSupportFragmentManager();
@@ -139,8 +148,11 @@ public class ComposeFragment extends Fragment {
                                         .title(dm.getFilter().getName()));
 
                                 marker.setTag(dm);
-                                marker.setIcon(BitmapDescriptorFactory.defaultMarker(MainFragment.getMarkerColor(dm.getFilter())));
-
+                                DropAnimator.dropPinEffect(marker);
+//                                marker.setIcon(BitmapDescriptorFactory.defaultMarker(MainFragment.getMarkerColor(dm.getFilter())));
+                                Bitmap bitmap = BitmapHelper.getBitmap(getContext(), Filter.chooseMarkerIcon(dm.getFilter().getName()));
+                                marker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
+                                mainFragment.getMarkers().add(marker);
                                 //GO BACK TO MAP FRAGMENT
                                 FragmentTransaction ft = fm.beginTransaction();
                                 ft.show(mainFragment);
@@ -182,8 +194,8 @@ public class ComposeFragment extends Fragment {
         contentText = view.findViewById(R.id.content_text);
 
         View sliderCardView = view.findViewById(R.id.sliders_cardview);
-        SeekBar distanceBar = sliderCardView.findViewById(R.id.distance_slider);
-        final SeekBar durationBar = sliderCardView.findViewById(R.id.duration_slider);
+        distanceBar = sliderCardView.findViewById(R.id.distance_slider);
+        durationBar = sliderCardView.findViewById(R.id.duration_slider);
         distanceValue = sliderCardView.findViewById(R.id.distance_slider_value);
         durationValue = sliderCardView.findViewById(R.id.duration_slider_value);
 
