@@ -3,6 +3,7 @@ package com.radarapp.mjr9r.radar.services;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -32,6 +33,8 @@ import com.radarapp.mjr9r.radar.model.Filter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.UUID;
@@ -48,6 +51,7 @@ public class DataService {
         return instance;
     }
     private ArrayList<DocumentChange> tmpChanges = new ArrayList<>();
+    private boolean handlerStarted = false;
 
     private DataService() {
     }
@@ -81,14 +85,25 @@ public class DataService {
 
                                 //CREATE NEW DROPMESSAGE FROM PARSED DATA
                                 DropMessage dm = new DropMessage(uuid, (float) dmLatitude, (float) dmLongitude, dmDate, dmContent, dmFilter, dmDistance, dmDuration);
-                                list.add(dm);
-                                Log.d("FIREBASE_FETCH", dm.getContent());
-                                Log.d("FIREBASE_FETCH", list.get(0).toString());
+
+                                //LOCAL CHECK FOR DURATION
+                                //SERVER SIDE CHECK IS PERFORMED EVERY HOUR SO THIS CATCHES MESSAGES EXPIRED IN BETWEEN
+                                if(dm.getUnixTime() + dm.getDuration() * 60 >= Calendar.getInstance().getTimeInMillis()/1000) {
+                                    list.add(dm);
+                                    Log.d("FIREBASE_FETCH", dm.getContent());
+                                    Log.d("FIREBASE_FETCH", list.get(0).toString());
+                                }
+                                else {
+                                    continue;
+                                }
+
+                                //LOCAL CHECK FOR DISTANCE
+                                // TODO: 18.02.2019: SMART WAY OF LIMITING LOCATION QUERY SERVER-SIDE
 
                                 //SAMPLE MESSAGES THAT SHOULD BE DELETED AT SOME POINT
-                                list.add(new DropMessage(UUID.fromString("a71493c9-3a63-4d66-ab18-974283ac375a"), 52.530673f, 13.328216f, new Date((long) 1537388610962L), "Das hier ist eine coole Tankstelle!", Filter.CUTE, 100, 60));
-                                list.add(new DropMessage(UUID.fromString("3c5c3f3e-1538-412b-9080-bd43b5b887fa"), 52.528086f, 13.324048f, new Date((long) 1537280742 * 1000), "Ei wie toll ein Gasturbinenwerk!", Filter.EVENT, 250, 60));
-                                list.add(new DropMessage(UUID.fromString("89d34b21-837e-4e38-a04d-d66d35cfe45c"), 52.527386f, 13.326866f, new Date((long) 1537284942 * 1000), "Vietnamesisch essen nur hier!", Filter.FOOD, 500, 120));
+                                //list.add(new DropMessage(UUID.fromString("a71493c9-3a63-4d66-ab18-974283ac375a"), 52.530673f, 13.328216f, new Date((long) 1537388610962L), "Das hier ist eine coole Tankstelle!", Filter.CUTE, 100, 60));
+                                //list.add(new DropMessage(UUID.fromString("3c5c3f3e-1538-412b-9080-bd43b5b887fa"), 52.528086f, 13.324048f, new Date((long) 1537280742 * 1000), "Ei wie toll ein Gasturbinenwerk!", Filter.EVENT, 250, 60));
+                                //list.add(new DropMessage(UUID.fromString("89d34b21-837e-4e38-a04d-d66d35cfe45c"), 52.527386f, 13.326866f, new Date((long) 1537284942 * 1000), "Vietnamesisch essen nur hier!", Filter.FOOD, 500, 120));
                                 Log.v("FIREBASE_FETCH", "LIST SIZE " + list.size());
 
                                 //THE CALLBACK IS A SIMPLE INTERFACE
@@ -122,10 +137,6 @@ public class DataService {
                         if(snapshots.getDocumentChanges().size() == 0) {
                         }
                         else {
-                            int duration = Toast.LENGTH_SHORT;
-
-                            Toast toast = Toast.makeText(context, "Someone dropped a message!", duration);
-                            toast.show();
                             Log.v("FIREBASE_LISTEN_ADDED", "SIZE: " + snapshots.getDocumentChanges().size());
                             for (DocumentChange dc : snapshots.getDocumentChanges()) {
                                 switch (dc.getType()) {
@@ -136,6 +147,10 @@ public class DataService {
                                             Log.v("FIREBASE_LISTEN_ADDED", "LOCAL CHANGE, DO NOTHING");
                                             break;
                                         }
+                                        int duration = Toast.LENGTH_SHORT;
+                                        Toast toast = Toast.makeText(context, "Someone dropped a message!", duration);
+                                        toast.show();
+
                                         //IF REMOTE CHANGES ARE DETECTED, THIS PART FIRES
                                         //THE REFRESHBUTTON WILL BE VISIBLE
                                         //ONCLICK, THE BUTTON WILL LOOP THROUGH THE MESSAGES AND ADD THEM TO THE MAP

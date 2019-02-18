@@ -15,6 +15,7 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.FloatingActionButton;
@@ -35,14 +36,17 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
@@ -64,7 +68,9 @@ import com.radarapp.mjr9r.radar.services.DataService;
 import com.radarapp.mjr9r.radar.services.MessageFetchCallback;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executor;
@@ -96,6 +102,9 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
     private BottomSheetBehavior mBottomSheetBehavior;
     private View bottomsheet;
     private boolean bottomSheetVisible;
+    private boolean handlerIsInitialized = false;
+
+    private final static float SELECT_ZOOM_LEVEL = 11.5f;
 
     FloatingActionButton fab;
 
@@ -260,6 +269,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
 //            Log.v("SANDWICH", "Current location: " + latLng.latitude + " - " + latLng.longitude);
 //        }
         updateMap();
+        startLocalRemover();
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
     }
 
@@ -295,6 +305,35 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
             }
         },
         getActivity());
+    }
+
+    //THIS RUNS EVERY MINUTE AND CHECKS IF MESSAGES EXPIRED
+    //THE MESSAGES ARE GOING TO BE REMOVED LOCALLY IN CASE THEY EXPIRED - A SERVERSIDE SCRIPTS REMOVES THEM GLOBALLY EVERY HOUR
+    //
+    //ATTENTION: THIS KEEPS RUNNING IN THE BACKGROUND EVEN WHEN THE APP IS CLOSED - PROBLEM??
+    private void startLocalRemover() {
+        if(!handlerIsInitialized) {
+            final Handler handler = new Handler();
+            handlerIsInitialized = true;
+            handler.postDelayed(new Runnable() {
+                public void run() {
+                    Toast toast = Toast.makeText(getActivity(), "Running handler!", Toast.LENGTH_SHORT);
+                    toast.show();
+                    for (Iterator<Marker> iterator = getMarkers().iterator(); iterator.hasNext(); ) {
+                        Marker m = iterator.next();
+                        if (((DropMessage) m.getTag()).getUnixTime() + ((DropMessage) m.getTag()).getDuration() * 60 <= Calendar.getInstance().getTimeInMillis() / 1000) {
+                            //REMOVE MARKER FROM MAP
+                            m.remove();
+                            iterator.remove();
+                        }
+                    }
+                    handler.postDelayed(this, 60000); //every 1 minute
+                }
+            }, 60000); //Every 60000 ms (1 minute)
+        }
+        else {
+            return;
+        }
     }
 
     @Override
@@ -354,6 +393,18 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
 
         // set buttons in bottomsheet
         final Button bookmarkBtn = bottomsheet.findViewById(R.id.bookmark_button);
+
+        // center map view on marker
+        CameraUpdate cu;
+        if(getmMap().getCameraPosition().zoom > SELECT_ZOOM_LEVEL) {
+            cu = CameraUpdateFactory.newLatLng(marker.getPosition());
+        }
+        else {
+            cu = CameraUpdateFactory.newLatLngZoom(marker.getPosition(), 15);
+        }
+        mMap.animateCamera(cu);
+        Log.v("ZOOMLEVEL", mMap.getCameraPosition().toString());
+
 
         // check if message has already been bookmarked
         // if not, set clicklistener

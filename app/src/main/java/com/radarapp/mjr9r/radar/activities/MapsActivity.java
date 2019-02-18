@@ -172,6 +172,7 @@ public class MapsActivity extends AppCompatActivity implements MainFragment.Refr
     }
 
 
+
     // BOTTOM NAVIGATION
     private void setupBottomNavigation(BottomNavigationView bottomNavigationView) {
         bottomNavigationView.setOnNavigationItemSelectedListener(mBottomNavigationSelectedListener);
