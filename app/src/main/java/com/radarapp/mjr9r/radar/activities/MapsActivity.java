@@ -19,6 +19,7 @@ import android.view.View;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.maps.model.LatLng;
@@ -31,7 +32,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationCallback;
 import com.radarapp.mjr9r.radar.helpers.OnBottomNavigationItemSelectedListener;
 
-public class MapsActivity extends AppCompatActivity implements MainFragment.RefreshInterface, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
+public class MapsActivity extends AppCompatActivity implements MainFragment.RefreshInterface, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, LocationListener {
 
     final int PERMISSION_LOCATION = 111;
     private GoogleApiClient mGoogleApiClient;
@@ -185,5 +186,10 @@ public class MapsActivity extends AppCompatActivity implements MainFragment.Refr
             fragment.refreshAdapter();
             Log.v("DATABASE_LISTENER", "REFRESHED ADAPTER");
         }
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+
     }
 }
