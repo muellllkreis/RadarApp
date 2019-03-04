@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
+    <color name="colorPrimary">#237F5C</color>
+    <color name="colorPrimaryDark">#093323</color>
+    <color name="colorAccent">#7F3323</color>
 
     <color name="cute">#EC407A</color>
     <color name="deal">#FFEB3B</color>
@@ -19,4 +19,8 @@
     <color name="transp_event">#222196F3</color>
     <color name="transp_secret">#229C27B0</color>
     <color name="transp_food">#224CAF50</color>
+
+    <color name="activeText">#000000</color>
+    <color name="inactiveText">#D3D3D3</color>
+    <color name="smallText">#A9A9A9</color>
 </resources>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="filters">
+        <item>"CUTE"</item>
+        <item>"DEAL"</item>
+        <item>"LOL"</item>
+        <item>"LEARN"</item>
+        <item>"EVENT"</item>
+        <item>"SECRET"</item>
+        <item>"FOOD"</item>
+    </array>
+    <array name="sortOptions">
+        <item>"Time"</item>
+        <item>"Category"</item>
+    </array>
+</resources>
