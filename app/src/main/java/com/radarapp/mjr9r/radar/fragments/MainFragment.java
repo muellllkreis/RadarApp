@@ -1,20 +1,14 @@
 package com.radarapp.mjr9r.radar.fragments;
 
 
-import android.animation.AnimatorSet;
-import android.animation.ObjectAnimator;
+
 import android.app.Activity;
-import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.Observer;
-import android.arch.lifecycle.ViewModel;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -35,7 +29,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -48,16 +41,13 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.radarapp.mjr9r.radar.Database.MessageDao;
 import com.radarapp.mjr9r.radar.R;
 import com.radarapp.mjr9r.radar.activities.MapsActivity;
 import com.radarapp.mjr9r.radar.helpers.BitmapHelper;
@@ -77,8 +67,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 import static com.radarapp.mjr9r.radar.helpers.MarkerAnimator.pulseMarker;
 
@@ -137,6 +125,8 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
     EditText quickdrop;
     ImageButton quickDropBtn;
 
+    Location lastLocation;
+
     public MainFragment() {
         // Required empty public constructor
     }
@@ -172,6 +162,10 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
         final boolean[] checkedItems = mainActivity.getCheckedItems();
 
         switch (item.getItemId()) {
+            case R.id.action_scan: {
+                filterMarkers();
+                return true;
+            }
             case R.id.action_filter: {
                 AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
                 // Set the dialog title
@@ -400,6 +394,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
                         getMarkers().add(marker);
                     }
                 }
+                filterMarkers();
             }
         },
         getActivity());
@@ -604,13 +599,18 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
 
         if(selectedItems.isEmpty()) {
             for(Marker m : getMarkers()) {
-                m.setVisible(true);
+                if(isInVisibleDistance(m)) {
+                    m.setVisible(true);
+                }
+                else {
+                    m.setVisible(true);
+                }
             }
         }
         else {
             for(Marker m : getMarkers()) {
                 DropMessage dm = (DropMessage) m.getTag();
-                if(selectedItems.contains(dm.getFilter().getName())) {
+                if(selectedItems.contains(dm.getFilter().getName()) && isInVisibleDistance(m)) {
                     m.setVisible(true);
                 }
                 else {
@@ -618,6 +618,29 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
                 }
 
             }
+        }
+    }
+
+    public boolean isInVisibleDistance(Marker m) {
+        Location location = mainActivity.requestLastLocation();
+        if(location == null) {
+            return false;
+        }
+        DropMessage dm = (DropMessage) m.getTag();
+        Location markerLocation = new Location(LocationManager.GPS_PROVIDER);
+        markerLocation.setLatitude(m.getPosition().latitude);
+        markerLocation.setLongitude(m.getPosition().longitude);
+
+        Log.v("DISTANCECHECK", location.getLatitude() + " - " + location.getLongitude());
+        Log.v("DISTANCECHECK", Float.toString(location.distanceTo(markerLocation)) + " " + Double.toString(dm.getDistance()));
+
+        // SHOW IF DISTANCE IS EQUAL TO OR SMALLER THAN SPECIFIED MAX DISTANCE
+        if(location.distanceTo(markerLocation) <= dm.getDistance()) {
+            return false;
+        }
+        // HIDE IF DISTANCE IS GREATER
+        else {
+            return true;
         }
     }
 

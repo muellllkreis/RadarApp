@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.location.LocationManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
@@ -28,6 +29,7 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.radarapp.mjr9r.radar.Database.AppDatabase;
 import com.radarapp.mjr9r.radar.R;
@@ -350,4 +352,23 @@ public class MapsActivity extends AppCompatActivity implements BookmarkFragment.
         }
         return null;
     }
+
+    public Location requestLastLocation() {
+        final Location lastLocation = new Location(LocationManager.GPS_PROVIDER);
+        try {
+
+            mFusedLocationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
+                    Log.v("DISTANCECHECK ACTIVITY: ", location.getLatitude() + " " + location.getLongitude());
+                    lastLocation.set(location);
+                }
+            });
+            return lastLocation;
+        } catch (SecurityException e) {
+            ActivityCompat.requestPermissions(this, new String[]{ Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_LOCATION);
+            return null;
+        }
+    }
+
 }

@@ -4,6 +4,13 @@
 
     <!-- Settings, should always be in the overflow -->
     <item
+        android:id="@+id/action_scan"
+        android:icon="@drawable/ic_refresh_black_24dp"
+        android:title="Scan"
+        app:showAsAction="ifRoom"
+        />
+
+    <item
         android:id="@+id/action_filter"
         android:icon="@drawable/ic_filter_list_black_24dp"
         android:title="@string/actionbar_filter"
