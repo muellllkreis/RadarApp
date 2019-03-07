@@ -14,6 +14,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
+import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -333,6 +335,24 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
         }
         else {
             return;
+        }
+    }
+
+    public void distanceCheck(Location location) {
+        for(Marker m: getMarkers()) {
+            DropMessage dm = (DropMessage) m.getTag();
+            Location markerLocation = new Location(LocationManager.GPS_PROVIDER);
+            markerLocation.setLatitude(m.getPosition().latitude);
+            markerLocation.setLongitude(m.getPosition().longitude);
+
+            // SHOW IF DISTANCE IS EQUAL TO OR SMALLER THAN SPECIFIED MAX DISTANCE
+            if(location.distanceTo(markerLocation) <= dm.getDistance()) {
+                m.setVisible(false);
+            }
+            // HIDE IF DISTANCE IS GREATER
+            else {
+                m.setVisible(true);
+            }
         }
     }
 

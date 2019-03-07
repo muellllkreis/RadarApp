@@ -15,6 +15,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -23,6 +24,7 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.radarapp.mjr9r.radar.Database.AppDatabase;
 import com.radarapp.mjr9r.radar.R;
@@ -31,6 +33,8 @@ import com.radarapp.mjr9r.radar.fragments.MainFragment;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationCallback;
 import com.radarapp.mjr9r.radar.helpers.OnBottomNavigationItemSelectedListener;
+
+import java.util.List;
 
 public class MapsActivity extends AppCompatActivity implements MainFragment.RefreshInterface, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, LocationListener {
 
@@ -190,6 +194,8 @@ public class MapsActivity extends AppCompatActivity implements MainFragment.Refr
 
     @Override
     public void onLocationChanged(Location location) {
-
+        Toast toast = Toast.makeText(this, "Running handler!", Toast.LENGTH_SHORT);
+        toast.show();
+        mainFragment.distanceCheck(location);
     }
 }
