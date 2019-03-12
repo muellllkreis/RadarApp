@@ -162,8 +162,8 @@ public class MapsActivity extends AppCompatActivity implements BookmarkFragment.
             SharedPreferences.Editor editor = sharedPref.edit();
             editor.putBoolean(getString(R.string.shared_prefs_qd), true);
             editor.putString(getString(R.string.shared_prefs_qd_category), getString(R.string.label_cute));
-            editor.putInt(getString(R.string.shared_prefs_qd_distance), 1000);
-            editor.putInt(getString(R.string.shared_prefs_qd_duration), 60);
+            editor.putString(getString(R.string.shared_prefs_qd_distance), "1000");
+            editor.putString(getString(R.string.shared_prefs_qd_duration), "60");
             editor.commit();
         }
     }
@@ -351,24 +351,6 @@ public class MapsActivity extends AppCompatActivity implements BookmarkFragment.
             }
         }
         return null;
-    }
-
-    public Location requestLastLocation() {
-        final Location lastLocation = new Location(LocationManager.GPS_PROVIDER);
-        try {
-
-            mFusedLocationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
-                @Override
-                public void onSuccess(Location location) {
-                    Log.v("DISTANCECHECK ACTIVITY: ", location.getLatitude() + " " + location.getLongitude());
-                    lastLocation.set(location);
-                }
-            });
-            return lastLocation;
-        } catch (SecurityException e) {
-            ActivityCompat.requestPermissions(this, new String[]{ Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_LOCATION);
-            return null;
-        }
     }
 
 }

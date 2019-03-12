@@ -253,10 +253,14 @@ public class BookmarkFragment extends Fragment {
             DropMessage dm = (DropMessage) m.getTag();
             Log.v("LISTVIEW", "CURRENT FILTER " + dm.getFilter().getName());
             if(selectedItems.isEmpty()) {
-                dropMessages.add(dm);
+                if(mainFragment.MessageIsInVisibleDistance(dm, mainFragment.lastLocation)) {
+                    dropMessages.add(dm);
+                }
             }
             else if(selectedItems.contains(dm.getFilter().getName())) {
-                dropMessages.add(dm);
+                if(mainFragment.MessageIsInVisibleDistance(dm, mainFragment.lastLocation)) {
+                    dropMessages.add(dm);
+                }
             }
             else {
                 continue;

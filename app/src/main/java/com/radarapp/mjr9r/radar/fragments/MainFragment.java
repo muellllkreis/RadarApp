@@ -125,7 +125,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
     EditText quickdrop;
     ImageButton quickDropBtn;
 
-    Location lastLocation;
+    public Location lastLocation;
 
     public MainFragment() {
         // Required empty public constructor
@@ -163,7 +163,60 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
 
         switch (item.getItemId()) {
             case R.id.action_scan: {
-                filterMarkers();
+                //SCANNING SHOULD TRIGGER A FULL FETCH FROM DATABASE + DISTANCECHECK + DURATIONCHECK
+                this.onMapClick(new LatLng(0,0));
+                selectedMarker = null;
+                mMap.clear();
+                getMarkers().clear();
+                try {
+                    mainActivity.getmFusedLocationClient().getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+                        @Override
+                        public void onSuccess(Location location) {
+                            lastLocation = location;
+                            Log.v("DISTANCECHECK", "Succesfully fetched last location!");
+                        }
+                    });
+                }
+                catch (SecurityException e) {
+
+                }
+                DataService.getInstance()
+                        .getInitialMessages(new MessageFetchCallback() {
+                                                @Override
+                                                public void onCallback(List<DropMessage> messageList) {
+                                                    for(int x = 0; x < messageList.size(); x++) {
+                                                        Log.v("UPDATEMAP", messageList.get(x).getContent());
+                                                        final DropMessage dm = messageList.get(x);
+                                                        Log.v("SCANTEST", dm.getFilter().getName());
+                                                        //FIND IF MARKER IS ALREADY ON MAP
+                                                        //IF YES, PROCEED TO NEXT MARKER
+                                                        boolean isOnMap = false;
+                                                        for(Marker tempMarker: getMarkers()) {
+                                                            if(dm.getDmId().toString().equals(((DropMessage) tempMarker.getTag()).getDmId().toString())) {
+                                                                isOnMap = true;
+                                                                break;
+                                                            }
+                                                        }
+                                                        if(!isOnMap) {
+                                                            Marker marker = mMap.addMarker(new MarkerOptions()
+                                                                    .position(new LatLng(dm.getLatitude(), dm.getLongitude()))
+                                                                    .title(dm.getFilter().getName()));
+                                                            marker.setTag(dm);
+                                                            modifyTransparency(marker);
+
+                                                            if(!MessageIsInVisibleDistance(dm, lastLocation)) {
+                                                                marker.setVisible(false);
+                                                            }
+
+                                                            Bitmap bitmap = BitmapHelper.getBitmap(getContext(), Filter.chooseMarkerIcon(dm.getFilter().getName()));
+                                                            marker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
+                                                            getMarkers().add(marker);
+                                                            //                 marker.setIcon(BitmapDescriptorFactory.defaultMarker(MainFragment.getMarkerColor(dm.getFilter())));
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                getActivity());
                 return true;
             }
             case R.id.action_filter: {
@@ -360,19 +413,31 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
 //            mMap.addMarker(userMarker);
 //            Log.v("SANDWICH", "Current location: " + latLng.latitude + " - " + latLng.longitude);
 //        }
-        updateMap();
+        updateMap(latLng);
         startLocalRemover();
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
     }
 
-    private void updateMap() {
+    private void updateMap(final LatLng latLng) {
+        try {
+            mainActivity.getmFusedLocationClient().getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
+                    lastLocation = location;
+                    Log.v("DISTANCECHECK", "Succesfully fetched last location!");
+                }
+            });
+        }
+        catch (SecurityException e) {
+
+        }
         DataService.getInstance()
                 .getInitialMessages(new MessageFetchCallback() {
             @Override
             public void onCallback(List<DropMessage> messageList) {
                 for(int x = 0; x < messageList.size(); x++) {
                     Log.v("UPDATEMAP", messageList.get(x).getContent());
-                    DropMessage dm = messageList.get(x);
+                    final DropMessage dm = messageList.get(x);
 
                     //FIND IF MARKER IS ALREADY ON MAP
                     //IF YES, PROCEED TO NEXT MARKER
@@ -388,13 +453,18 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
                                 .position(new LatLng(dm.getLatitude(), dm.getLongitude()))
                                 .title(dm.getFilter().getName()));
                         marker.setTag(dm);
-                        //                 marker.setIcon(BitmapDescriptorFactory.defaultMarker(MainFragment.getMarkerColor(dm.getFilter())));
+                        modifyTransparency(marker);
+
+                        if(!MessageIsInVisibleDistance(dm, lastLocation)) {
+                            marker.setVisible(false);
+                        }
+
                         Bitmap bitmap = BitmapHelper.getBitmap(getContext(), Filter.chooseMarkerIcon(dm.getFilter().getName()));
                         marker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
                         getMarkers().add(marker);
+                        //                 marker.setIcon(BitmapDescriptorFactory.defaultMarker(MainFragment.getMarkerColor(dm.getFilter())));
                     }
                 }
-                filterMarkers();
             }
         },
         getActivity());
@@ -414,6 +484,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
                     toast.show();
                     for (Iterator<Marker> iterator = getMarkers().iterator(); iterator.hasNext(); ) {
                         Marker m = iterator.next();
+                        modifyTransparency(m);
                         if (((DropMessage) m.getTag()).getUnixTime() + ((DropMessage) m.getTag()).getDuration() * 60 <= Calendar.getInstance().getTimeInMillis() / 1000) {
                             //REMOVE MARKER FROM MAP
                             m.remove();
@@ -427,6 +498,14 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
         else {
             return;
         }
+    }
+
+    public void modifyTransparency(Marker marker) {
+        DropMessage dm = (DropMessage) marker.getTag();
+        long minutesAgo = ((new Date()).getTime()/1000/60) - ((dm.getDate().getTime()/1000)/60);
+        float newAlpha = (float) (minutesAgo/dm.getDuration());
+        Log.v("ALPHATEST", Long.toString(minutesAgo) + " " + Double.toString(minutesAgo/dm.getDuration()));
+        marker.setAlpha(1 - newAlpha);
     }
 
     @Override
@@ -445,6 +524,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
 
         //cardView = LayoutInflater.from(this.getContext()).inflate(R.layout.content_location_cardview,  null);
         Log.v("OHOH", "KLICK AUF MARKER");
+
         mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         mBottomSheetBehavior.setPeekHeight(300);
         bottomSheetVisible = true;
@@ -599,18 +679,18 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
 
         if(selectedItems.isEmpty()) {
             for(Marker m : getMarkers()) {
-                if(isInVisibleDistance(m)) {
+                if(MarkerisInVisibleDistance(m)) {
                     m.setVisible(true);
                 }
                 else {
-                    m.setVisible(true);
+                    m.setVisible(false);
                 }
             }
         }
         else {
             for(Marker m : getMarkers()) {
                 DropMessage dm = (DropMessage) m.getTag();
-                if(selectedItems.contains(dm.getFilter().getName()) && isInVisibleDistance(m)) {
+                if(selectedItems.contains(dm.getFilter().getName()) && MarkerisInVisibleDistance(m)) {
                     m.setVisible(true);
                 }
                 else {
@@ -621,8 +701,8 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
         }
     }
 
-    public boolean isInVisibleDistance(Marker m) {
-        Location location = mainActivity.requestLastLocation();
+    public boolean MarkerisInVisibleDistance(Marker m) {
+        Location location = lastLocation;
         if(location == null) {
             return false;
         }
@@ -636,11 +716,55 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
 
         // SHOW IF DISTANCE IS EQUAL TO OR SMALLER THAN SPECIFIED MAX DISTANCE
         if(location.distanceTo(markerLocation) <= dm.getDistance()) {
-            return false;
+            return true;
         }
         // HIDE IF DISTANCE IS GREATER
         else {
+            return false;
+        }
+    }
+
+    public boolean MessageIsInVisibleDistance(DropMessage dm, Location location) {
+        if(location == null) {
+            return false;
+        }
+        Location markerLocation = new Location(LocationManager.GPS_PROVIDER);
+        markerLocation.setLatitude(dm.getLatitude());
+        markerLocation.setLongitude(dm.getLongitude());
+
+        Log.v("DISTANCECHECK", location.getLatitude() + " - " + location.getLongitude());
+        Log.v("DISTANCECHECK", Float.toString(location.distanceTo(markerLocation)) + " " + Double.toString(dm.getDistance()));
+        Log.v("DISTANCECHECK", Boolean.toString(location.distanceTo(markerLocation) <= dm.getDistance()));
+
+        // SHOW IF DISTANCE IS EQUAL TO OR SMALLER THAN SPECIFIED MAX DISTANCE
+        if(location.distanceTo(markerLocation) <= dm.getDistance()) {
             return true;
+        }
+        // HIDE IF DISTANCE IS GREATER
+        else {
+            return false;
+        }
+    }
+
+    public boolean MessageIsInVisibleDistance(Location dmloc, Double distance, Location location) {
+        if(location == null) {
+            return false;
+        }
+        Location markerLocation = new Location(LocationManager.GPS_PROVIDER);
+        markerLocation.setLatitude(dmloc.getLatitude());
+        markerLocation.setLongitude(dmloc.getLongitude());
+
+        Log.v("DISTANCECHECK", location.getLatitude() + " - " + location.getLongitude());
+        Log.v("DISTANCECHECK", Float.toString(location.distanceTo(markerLocation)) + " " + Double.toString(distance));
+        Log.v("DISTANCECHECK", Boolean.toString(location.distanceTo(markerLocation) <= distance));
+
+        // SHOW IF DISTANCE IS EQUAL TO OR SMALLER THAN SPECIFIED MAX DISTANCE
+        if(location.distanceTo(markerLocation) <= distance) {
+            return true;
+        }
+        // HIDE IF DISTANCE IS GREATER
+        else {
+            return false;
         }
     }
 
