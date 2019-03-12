@@ -44,15 +44,46 @@
     <!-- Bottom Navigation Strings-->
     <string name="menu_map">Map</string>
     <string name="menu_compose">Compose</string>
-    <string name="menu_bookmarks">Bookmarks</string>
+    <string name="menu_listview">List View</string>
 
-    <!-- Actionbar Strings -->
+    <!-- Actionbar Titles -->
+    <string name="actionbar_title_map">Radar</string>
+    <string name="actionbar_title_compose">Compose Message</string>
+    <string name="actionbar_title_listview">Nearby Messages</string>
+    <string name="actionbar_title_settings">Settings</string>
+
+    <!-- Actionbar Buttons -->
     <string name="actionbar_send">Send note</string>
+    <string name="actionbar_filter">Filter</string>
     <string name="actionbar_settings">Settings</string>
+
+    <!-- Filter Dialog Strings -->
+    <string name="filter_dialog_title">Filter messages</string>
+    <string name="filter_dialog_positive">APPLY FILTER</string>
+    <string name="filter_dialog_negative">CANCEL</string>
+
+    <!-- Sort Dialog Strings -->
+    <string name="sort_dialog_title">Sort messages by</string>
+    <string name="sort_dialog_positive">SORT</string>
+
+    <!-- Settings Fragment Strings -->
+    <string name="settings_quickdrop_headline">QuickDrop Preferences</string>
+    <string name="settings_quickdrop_switch_txt">QuickDrop</string>
+    <string name="settings_quickdrop_switch_desc">Enable the option to quickly drop a message on the map screen.</string>
+    <string name="settings_quickdrop_category_txt">Default Category</string>
+    <string name="settings_quickdrop_distance_txt">Default Distance</string>
+    <string name="settings_quickdrop_duration_txt">Default Duration</string>
 
     <!-- SHARED PREFERENCES -->
     <string name="shared_prefs_bookmarks">com.radarapp.radar.PREFERENCE_BOOKMARKS</string>
+    <string name="shared_prefs_qd">com.radarapp.radar.PREFERENCE_QD</string>
+    <string name="shared_prefs_qd_category">com.radarapp.radar.PREFERENCE_QD_CATEGORY</string>
+    <string name="shared_prefs_qd_distance">com.radarapp.radar.PREFERENCE_QD_DISTANCE</string>
+    <string name="shared_prefs_qd_duration">com.radarapp.radar.PREFERENCE_QD_DURATION</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <!-- DEFAULT VALUES -->
+    <string name="default_qd_distance">1000</string>
+    <string name="default_qd_duration">60</string>
+
+
 </resources>

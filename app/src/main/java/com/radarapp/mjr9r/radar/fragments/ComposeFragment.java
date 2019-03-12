@@ -67,6 +67,8 @@ public class ComposeFragment extends Fragment {
     private SeekBar distanceBar;
     private SeekBar durationBar;
 
+    private MapsActivity mainActivity;
+
 
     public ComposeFragment() {
         // Required empty public constructor
@@ -96,6 +98,8 @@ public class ComposeFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+
+        mainActivity = (MapsActivity) this.getActivity();
     }
 
 
@@ -103,6 +107,7 @@ public class ComposeFragment extends Fragment {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.actiobar_compose, menu);
+        mainActivity.getSupportActionBar().setTitle(R.string.actionbar_title_compose);
     }
 
     @Override
@@ -179,6 +184,10 @@ public class ComposeFragment extends Fragment {
                     //Message error that location is not known
                     return false;
                 }
+                return true;
+            }
+            case R.id.action_settings: {
+                mainActivity.openSettings(this);
                 return true;
             }
         }

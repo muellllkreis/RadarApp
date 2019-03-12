@@ -1,19 +1,14 @@
 package com.radarapp.mjr9r.radar.fragments;
 
 
-import android.animation.AnimatorSet;
-import android.animation.ObjectAnimator;
+
 import android.app.Activity;
-import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.Observer;
-import android.arch.lifecycle.ViewModel;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -22,16 +17,18 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.CardView;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -44,16 +41,13 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.radarapp.mjr9r.radar.Database.MessageDao;
 import com.radarapp.mjr9r.radar.R;
 import com.radarapp.mjr9r.radar.activities.MapsActivity;
 import com.radarapp.mjr9r.radar.helpers.BitmapHelper;
@@ -73,8 +67,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 import static com.radarapp.mjr9r.radar.helpers.MarkerAnimator.pulseMarker;
 
@@ -108,9 +100,32 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
 
     FloatingActionButton fab;
 
+    private MapsActivity mainActivity;
+
+    private SharedPreferences sharedPreferences;
+
+    //GETS ALL MARKERS DISREGARDING DISTANCE TO USER AND DURATION
     public List<Marker> getMarkers() {
         return markers;
     }
+
+    public List<Marker> getMarkersRespectingDistance() {
+        return markers;
+    }
+
+    public List<Marker> getMarkersRespectingDuration() {
+        return markers;
+    }
+
+    public List<Marker> getMarkersRespectingDistanceAndDuration() {
+        return markers;
+    }
+
+    CardView quickdropView;
+    EditText quickdrop;
+    ImageButton quickDropBtn;
+
+    public Location lastLocation;
 
     public MainFragment() {
         // Required empty public constructor
@@ -125,12 +140,131 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+
+        mainActivity = (MapsActivity) this.getActivity();
+
+        sharedPreferences = mainActivity.getSharedPref();
     }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.actiobar_main, menu);
+        mainActivity.getSupportActionBar().setTitle(R.string.actionbar_title_map);
+    }
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        final ArrayList selectedItems = mainActivity.getSelectedItems();
+        List<DropMessage> dropMessages = mainActivity.getDropMessages();
+        final boolean[] checkedItems = mainActivity.getCheckedItems();
+
+        switch (item.getItemId()) {
+            case R.id.action_scan: {
+                //SCANNING SHOULD TRIGGER A FULL FETCH FROM DATABASE + DISTANCECHECK + DURATIONCHECK
+                this.onMapClick(new LatLng(0,0));
+                selectedMarker = null;
+                mMap.clear();
+                getMarkers().clear();
+                try {
+                    mainActivity.getmFusedLocationClient().getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+                        @Override
+                        public void onSuccess(Location location) {
+                            lastLocation = location;
+                            Log.v("DISTANCECHECK", "Succesfully fetched last location!");
+                        }
+                    });
+                }
+                catch (SecurityException e) {
+
+                }
+                DataService.getInstance()
+                        .getInitialMessages(new MessageFetchCallback() {
+                                                @Override
+                                                public void onCallback(List<DropMessage> messageList) {
+                                                    for(int x = 0; x < messageList.size(); x++) {
+                                                        Log.v("UPDATEMAP", messageList.get(x).getContent());
+                                                        final DropMessage dm = messageList.get(x);
+                                                        Log.v("SCANTEST", dm.getFilter().getName());
+                                                        //FIND IF MARKER IS ALREADY ON MAP
+                                                        //IF YES, PROCEED TO NEXT MARKER
+                                                        boolean isOnMap = false;
+                                                        for(Marker tempMarker: getMarkers()) {
+                                                            if(dm.getDmId().toString().equals(((DropMessage) tempMarker.getTag()).getDmId().toString())) {
+                                                                isOnMap = true;
+                                                                break;
+                                                            }
+                                                        }
+                                                        if(!isOnMap) {
+                                                            Marker marker = mMap.addMarker(new MarkerOptions()
+                                                                    .position(new LatLng(dm.getLatitude(), dm.getLongitude()))
+                                                                    .title(dm.getFilter().getName()));
+                                                            marker.setTag(dm);
+                                                            modifyTransparency(marker);
+
+                                                            if(!MessageIsInVisibleDistance(dm, lastLocation)) {
+                                                                marker.setVisible(false);
+                                                            }
+
+                                                            Bitmap bitmap = BitmapHelper.getBitmap(getContext(), Filter.chooseMarkerIcon(dm.getFilter().getName()));
+                                                            marker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
+                                                            getMarkers().add(marker);
+                                                            //                 marker.setIcon(BitmapDescriptorFactory.defaultMarker(MainFragment.getMarkerColor(dm.getFilter())));
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                getActivity());
+                return true;
+            }
+            case R.id.action_filter: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                // Set the dialog title
+                builder.setTitle(R.string.filter_dialog_title)
+                        // Specify the list array, the items to be selected by default (null for none),
+                        // and the listener through which to receive callbacks when items are selected
+                        .setMultiChoiceItems(R.array.filters, checkedItems,
+                                new DialogInterface.OnMultiChoiceClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which,
+                                                        boolean isChecked) {
+                                        if (isChecked) {
+                                            // If the user checked the item, add it to the selected items
+                                            selectedItems.add(Filter.values()[which].getName());
+                                            checkedItems[which] = true;
+                                        } else if (selectedItems.contains(Filter.values()[which].getName())) {
+                                            // Else, if the item is already in the array, remove it
+                                            selectedItems.remove(Filter.values()[which].getName());
+                                            checkedItems[which] = false;
+                                        }
+                                    }
+                                })
+                        // Set the action buttons
+                        .setPositiveButton(R.string.filter_dialog_positive, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int id) {
+                                // User clicked OK, so save the selectedItems results somewhere
+                                // or return them to the component that opened the dialog
+                                filterMarkers();
+                            }
+                        })
+                        .setNegativeButton(R.string.filter_dialog_negative, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int id) {
+                            }
+                        });
+                AlertDialog dialog = builder.create();
+                dialog.show();
+                return true;
+            }
+            case R.id.action_settings: {
+                mainActivity.openSettings(this);
+                return true;
+            }
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -172,8 +306,19 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
 
 
         //THE FOLLOWING CODE HANDLES QUICKDROP
-        final EditText quickdrop = (EditText) view.findViewById(R.id.quickdrop_edit);
-        final ImageButton quickDropBtn = view.findViewById(R.id.quickdrop_send);
+        quickdrop = (EditText) view.findViewById(R.id.quickdrop_edit);
+        quickDropBtn = view.findViewById(R.id.quickdrop_send);
+        quickdropView = view.findViewById(R.id.quickdrop_cardview);
+
+        //CHECK PREFERENCES SPECIFIED IN SETTINGS TO BUILD VIEW
+        if(sharedPreferences.getBoolean(getString(R.string.shared_prefs_qd), true)) {
+            quickdropView.setVisibility(View.VISIBLE);
+
+
+        }
+        else {
+            quickdropView.setVisibility(View.GONE);
+        }
 
         quickDropBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -268,19 +413,31 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
 //            mMap.addMarker(userMarker);
 //            Log.v("SANDWICH", "Current location: " + latLng.latitude + " - " + latLng.longitude);
 //        }
-        updateMap();
+        updateMap(latLng);
         startLocalRemover();
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
     }
 
-    private void updateMap() {
+    private void updateMap(final LatLng latLng) {
+        try {
+            mainActivity.getmFusedLocationClient().getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
+                    lastLocation = location;
+                    Log.v("DISTANCECHECK", "Succesfully fetched last location!");
+                }
+            });
+        }
+        catch (SecurityException e) {
+
+        }
         DataService.getInstance()
                 .getInitialMessages(new MessageFetchCallback() {
             @Override
             public void onCallback(List<DropMessage> messageList) {
                 for(int x = 0; x < messageList.size(); x++) {
                     Log.v("UPDATEMAP", messageList.get(x).getContent());
-                    DropMessage dm = messageList.get(x);
+                    final DropMessage dm = messageList.get(x);
 
                     //FIND IF MARKER IS ALREADY ON MAP
                     //IF YES, PROCEED TO NEXT MARKER
@@ -296,10 +453,16 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
                                 .position(new LatLng(dm.getLatitude(), dm.getLongitude()))
                                 .title(dm.getFilter().getName()));
                         marker.setTag(dm);
-                        //                 marker.setIcon(BitmapDescriptorFactory.defaultMarker(MainFragment.getMarkerColor(dm.getFilter())));
+                        modifyTransparency(marker);
+
+                        if(!MessageIsInVisibleDistance(dm, lastLocation)) {
+                            marker.setVisible(false);
+                        }
+
                         Bitmap bitmap = BitmapHelper.getBitmap(getContext(), Filter.chooseMarkerIcon(dm.getFilter().getName()));
                         marker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
                         getMarkers().add(marker);
+                        //                 marker.setIcon(BitmapDescriptorFactory.defaultMarker(MainFragment.getMarkerColor(dm.getFilter())));
                     }
                 }
             }
@@ -321,19 +484,28 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
                     toast.show();
                     for (Iterator<Marker> iterator = getMarkers().iterator(); iterator.hasNext(); ) {
                         Marker m = iterator.next();
+                        modifyTransparency(m);
                         if (((DropMessage) m.getTag()).getUnixTime() + ((DropMessage) m.getTag()).getDuration() * 60 <= Calendar.getInstance().getTimeInMillis() / 1000) {
                             //REMOVE MARKER FROM MAP
                             m.remove();
                             iterator.remove();
                         }
                     }
-                    handler.postDelayed(this, 60000); //every 1 minute
+                    handler.postDelayed(this, 60000); //every minute
                 }
             }, 60000); //Every 60000 ms (1 minute)
         }
         else {
             return;
         }
+    }
+
+    public void modifyTransparency(Marker marker) {
+        DropMessage dm = (DropMessage) marker.getTag();
+        long minutesAgo = ((new Date()).getTime()/1000/60) - ((dm.getDate().getTime()/1000)/60);
+        float newAlpha = (float) (minutesAgo/dm.getDuration());
+        Log.v("ALPHATEST", Long.toString(minutesAgo) + " " + Double.toString(minutesAgo/dm.getDuration()));
+        marker.setAlpha(1 - newAlpha);
     }
 
     @Override
@@ -352,8 +524,9 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
 
         //cardView = LayoutInflater.from(this.getContext()).inflate(R.layout.content_location_cardview,  null);
         Log.v("OHOH", "KLICK AUF MARKER");
+
         mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-        mBottomSheetBehavior.setPeekHeight(500);
+        mBottomSheetBehavior.setPeekHeight(300);
         bottomSheetVisible = true;
 
         //get message associated with marker
@@ -391,9 +564,6 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
 
         //bottomsheet.setBackgroundColor(Color.parseColor(dmFilter.getColor()));
 
-        // set buttons in bottomsheet
-        final Button bookmarkBtn = bottomsheet.findViewById(R.id.bookmark_button);
-
         // center map view on marker
         CameraUpdate cu;
         if(getmMap().getCameraPosition().zoom > SELECT_ZOOM_LEVEL) {
@@ -405,49 +575,6 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
         mMap.animateCamera(cu);
         Log.v("ZOOMLEVEL", mMap.getCameraPosition().toString());
 
-
-        // check if message has already been bookmarked
-        // if not, set clicklistener
-        if(hasBeenBookmarked(dm)) {
-            bookmarkBtn.setText("BOOKMARKED");
-            bookmarkBtn.setActivated(false);
-            Drawable img = getContext().getResources().getDrawable( R.drawable.ic_bookmark_white_24dp );
-            bookmarkBtn.setCompoundDrawablesWithIntrinsicBounds( img, null, null, null );
-        }
-        else {
-            bookmarkBtn.setText("BOOKMARK THIS");
-            Drawable img = getContext().getResources().getDrawable( R.drawable.ic_bookmark_border_white_24dp);
-            bookmarkBtn.setCompoundDrawablesWithIntrinsicBounds( img, null, null, null );
-        }
-        bookmarkBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                final MessageDao messageDao = ((MapsActivity) getActivity()).getLocalDb().messageDao();
-                Executor executor = Executors.newSingleThreadExecutor();
-                executor.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        //MAYBE ADD OPTION TO DELETE/UNBOOKMARK MESSAGES
-                        //THE WAY BELOW DOES NOT WORK THOUGH
-//                        if(hasBeenBookmarked(dm)) {
-////                            Log.v("DATABASE_LISTENER", "PERFORMING DELETE");
-////                                messageDao.delete(dm);
-////                        }
-                        if(!hasBeenBookmarked(dm)) {
-                            Log.v("DATABASE_LISTENER", "PERFORMING INSERT");
-                                messageDao.insertAll(dm);
-                                ((MapsActivity) getActivity()).refreshAdapterBookmarkFragment();
-                        }
-                    }
-                });
-                if(!hasBeenBookmarked(dm)) {
-                    bookmarkBtn.setText("BOOKMARKED");
-                    Drawable img = getContext().getResources().getDrawable( R.drawable.ic_bookmark_white_24dp );
-                    bookmarkBtn.setCompoundDrawablesWithIntrinsicBounds( img, null, null, null );
-                    setBookmarkStatus(dm, true);
-                }
-            }
-        });
         // return true hides info window from appearing, maybe later we need to change this to
         // false
         Log.v("MARKERLIST", "LIST LENGTH: " + getMarkers().size());
@@ -466,12 +593,14 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
         mBottomSheetBehavior.setHideable(true);//Important to add
         mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
 
-        // HANDLE PULSE ANIMATION FOR SELECTED/DESELECTED MARKER
-        MarkerAnimator.stopAnimation();
-        Bitmap bitmap = BitmapHelper.getBitmap(getContext(), Filter.chooseMarkerIcon(((DropMessage) selectedMarker.getTag()).getFilter().getName()));
-        selectedMarker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
-        selectedCircle.remove();
 
+        if(selectedMarker != null) {
+            // HANDLE PULSE ANIMATION FOR SELECTED/DESELECTED MARKER
+            MarkerAnimator.stopAnimation();
+            Bitmap bitmap = BitmapHelper.getBitmap(getContext(), Filter.chooseMarkerIcon(((DropMessage) selectedMarker.getTag()).getFilter().getName()));
+            selectedMarker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
+            selectedCircle.remove();
+        }
         //else new quickdrop?
     }
 
@@ -480,6 +609,9 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
     }
 
     private void quickDropMessage(final String content) {
+        if(content.length() == 0) {
+            return;
+        }
         FusedLocationProviderClient locationClient = ((MapsActivity) getActivity()).getmFusedLocationClient();
         try {
             Log.v("QUICKDROP", "IN TRY BLOCK");
@@ -492,9 +624,9 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
                                         (float) location.getLongitude(),
                                         new Date(),
                                         content,
-                                        Filter.CUTE,
-                                        0,
-                                        0);
+                                        Filter.valueOf(sharedPreferences.getString(getString(R.string.shared_prefs_qd_category), Filter.CUTE.getName())),
+                                        Integer.valueOf(sharedPreferences.getString(getString(R.string.shared_prefs_qd_distance), "1000")),
+                                        Integer.valueOf(sharedPreferences.getString(getString(R.string.shared_prefs_qd_duration), "60")));
 
                                 Marker marker = mMap.addMarker(new MarkerOptions()
                                         .position(new LatLng(dm.getLatitude(), dm.getLongitude()))
@@ -520,23 +652,128 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
         }
     }
 
-    private boolean hasBeenBookmarked(DropMessage dm) {
-        Context context = getActivity();
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                getString(R.string.shared_prefs_bookmarks), Context.MODE_PRIVATE);
-        boolean result = sharedPref.getBoolean(dm.getDmId().toString(), false);
-        Log.v("DATABASE_LISTENER", "SHAREDPREFS RESULT FOR DM_ID " + dm.getDmId() + ": " + result);
-        return result;
-    }
-
-    private void setBookmarkStatus(DropMessage dm, boolean status) {
-        Context context = getActivity();
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                getString(R.string.shared_prefs_bookmarks), Context.MODE_PRIVATE);
-        sharedPref.edit().putBoolean(dm.getDmId().toString(), status).apply();
-    }
-
     public interface RefreshInterface{
         public void refreshAdapterBookmarkFragment();
+    }
+
+    public void centerCameraOnMessage(DropMessage message) {
+        CameraUpdate cu;
+        cu = CameraUpdateFactory.newLatLng(new LatLng(message.getLatitude(), message.getLongitude()));
+        mMap.animateCamera(cu);
+    }
+
+    public void selectMessage(DropMessage message) {
+        for(Marker m : this.getMarkers()) {
+            if(((DropMessage) m.getTag()).getDmId().equals(message.getDmId())) {
+                this.onMarkerClick(m);
+                return;
+            }
+        }
+    }
+
+    public void filterMarkers() {
+        final ArrayList selectedItems = mainActivity.getSelectedItems();
+        List<DropMessage> dropMessages = mainActivity.getDropMessages();
+
+        dropMessages.clear();
+
+        if(selectedItems.isEmpty()) {
+            for(Marker m : getMarkers()) {
+                if(MarkerisInVisibleDistance(m)) {
+                    m.setVisible(true);
+                }
+                else {
+                    m.setVisible(false);
+                }
+            }
+        }
+        else {
+            for(Marker m : getMarkers()) {
+                DropMessage dm = (DropMessage) m.getTag();
+                if(selectedItems.contains(dm.getFilter().getName()) && MarkerisInVisibleDistance(m)) {
+                    m.setVisible(true);
+                }
+                else {
+                    m.setVisible(false);
+                }
+
+            }
+        }
+    }
+
+    public boolean MarkerisInVisibleDistance(Marker m) {
+        Location location = lastLocation;
+        if(location == null) {
+            return false;
+        }
+        DropMessage dm = (DropMessage) m.getTag();
+        Location markerLocation = new Location(LocationManager.GPS_PROVIDER);
+        markerLocation.setLatitude(m.getPosition().latitude);
+        markerLocation.setLongitude(m.getPosition().longitude);
+
+        Log.v("DISTANCECHECK", location.getLatitude() + " - " + location.getLongitude());
+        Log.v("DISTANCECHECK", Float.toString(location.distanceTo(markerLocation)) + " " + Double.toString(dm.getDistance()));
+
+        // SHOW IF DISTANCE IS EQUAL TO OR SMALLER THAN SPECIFIED MAX DISTANCE
+        if(location.distanceTo(markerLocation) <= dm.getDistance()) {
+            return true;
+        }
+        // HIDE IF DISTANCE IS GREATER
+        else {
+            return false;
+        }
+    }
+
+    public boolean MessageIsInVisibleDistance(DropMessage dm, Location location) {
+        if(location == null) {
+            return false;
+        }
+        Location markerLocation = new Location(LocationManager.GPS_PROVIDER);
+        markerLocation.setLatitude(dm.getLatitude());
+        markerLocation.setLongitude(dm.getLongitude());
+
+        Log.v("DISTANCECHECK", location.getLatitude() + " - " + location.getLongitude());
+        Log.v("DISTANCECHECK", Float.toString(location.distanceTo(markerLocation)) + " " + Double.toString(dm.getDistance()));
+        Log.v("DISTANCECHECK", Boolean.toString(location.distanceTo(markerLocation) <= dm.getDistance()));
+
+        // SHOW IF DISTANCE IS EQUAL TO OR SMALLER THAN SPECIFIED MAX DISTANCE
+        if(location.distanceTo(markerLocation) <= dm.getDistance()) {
+            return true;
+        }
+        // HIDE IF DISTANCE IS GREATER
+        else {
+            return false;
+        }
+    }
+
+    public boolean MessageIsInVisibleDistance(Location dmloc, Double distance, Location location) {
+        if(location == null) {
+            return false;
+        }
+        Location markerLocation = new Location(LocationManager.GPS_PROVIDER);
+        markerLocation.setLatitude(dmloc.getLatitude());
+        markerLocation.setLongitude(dmloc.getLongitude());
+
+        Log.v("DISTANCECHECK", location.getLatitude() + " - " + location.getLongitude());
+        Log.v("DISTANCECHECK", Float.toString(location.distanceTo(markerLocation)) + " " + Double.toString(distance));
+        Log.v("DISTANCECHECK", Boolean.toString(location.distanceTo(markerLocation) <= distance));
+
+        // SHOW IF DISTANCE IS EQUAL TO OR SMALLER THAN SPECIFIED MAX DISTANCE
+        if(location.distanceTo(markerLocation) <= distance) {
+            return true;
+        }
+        // HIDE IF DISTANCE IS GREATER
+        else {
+            return false;
+        }
+    }
+
+    public void checkSettingsChange() {
+        if(sharedPreferences.getBoolean(getString(R.string.shared_prefs_qd), true)) {
+            quickdropView.setVisibility(View.VISIBLE);
+        }
+        else {
+            quickdropView.setVisibility(View.GONE);
+        }
     }
 }

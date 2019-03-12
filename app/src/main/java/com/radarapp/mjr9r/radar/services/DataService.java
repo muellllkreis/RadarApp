@@ -3,6 +3,8 @@ package com.radarapp.mjr9r.radar.services;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -16,6 +18,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.EventListener;
@@ -147,66 +150,93 @@ public class DataService {
                                             Log.v("FIREBASE_LISTEN_ADDED", "LOCAL CHANGE, DO NOTHING");
                                             break;
                                         }
-                                        int duration = Toast.LENGTH_SHORT;
-                                        Toast toast = Toast.makeText(context, "Someone dropped a message!", duration);
-                                        toast.show();
 
-                                        //IF REMOTE CHANGES ARE DETECTED, THIS PART FIRES
-                                        //THE REFRESHBUTTON WILL BE VISIBLE
-                                        //ONCLICK, THE BUTTON WILL LOOP THROUGH THE MESSAGES AND ADD THEM TO THE MAP
-                                        tmpChanges.add(dc);
-                                        //NOTE THAT WE HAVE TO MAINTAIN A LIST OF CHANGES IF MORE THAN ONE MESSAGES
-                                        //ARE ADDED BEFORE THE BUTTON IS CLICKED
-                                        //THE LIST ALSO GETS CLEARED ON BUTTON CLICK
-                                        Button btn = ((MapsActivity) activity).findViewById(R.id.refresh_button);
-                                        if(tmpChanges.size() == 1) {
-                                            btn.setText(tmpChanges.size() + " NEW MESSAGE");
+
+                                        final MainFragment mainFragment = (MainFragment) ((MapsActivity) activity).getSupportFragmentManager().findFragmentByTag("MAP_FRAGMENT");
+
+                                        //PERFORM DISTANCECHECK
+                                        Float latitude = Float.valueOf(dc.getDocument().get("latitude").toString());
+                                        Float longitude = Float.valueOf(dc.getDocument().get("longitude").toString());
+                                        final Double distance = Double.valueOf(dc.getDocument().get("distance").toString());
+                                        final Location messagelocation = new Location(LocationManager.GPS_PROVIDER);
+                                        messagelocation.setLatitude(latitude);
+                                        messagelocation.setLongitude(longitude);
+
+                                        try {
+                                            ((MapsActivity) activity).getmFusedLocationClient().getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+                                                @Override
+                                                public void onSuccess(Location location) {
+                                                    mainFragment.lastLocation = location;
+                                                }
+                                            });
+                                        } catch (SecurityException se) {
+                                        }
+                                        int duration = Toast.LENGTH_SHORT;
+
+                                        // THE USER IS ONLY NOTIFIED WHEN THE MESSAGE WAS DROPPED IN HIS SURROUNDINGS AND SHOULD BE VISIBLE TO HIS
+                                        // LOCATION
+                                        if(mainFragment.MessageIsInVisibleDistance(messagelocation, distance, mainFragment.lastLocation)) {
+                                            Toast toast = Toast.makeText(context, "Someone dropped a message nearby!", duration);
+                                            toast.show();
+                                            //IF REMOTE CHANGES ARE DETECTED, THIS PART FIRES
+                                            //THE REFRESHBUTTON WILL BE VISIBLE
+                                            //ONCLICK, THE BUTTON WILL LOOP THROUGH THE MESSAGES AND ADD THEM TO THE MAP
+                                            tmpChanges.add(dc);
+                                            //NOTE THAT WE HAVE TO MAINTAIN A LIST OF CHANGES IF MORE THAN ONE MESSAGES
+                                            //ARE ADDED BEFORE THE BUTTON IS CLICKED
+                                            //THE LIST ALSO GETS CLEARED ON BUTTON CLICK
+                                            Button btn = ((MapsActivity) activity).findViewById(R.id.refresh_button);
+                                            if (tmpChanges.size() == 1) {
+                                                btn.setText(tmpChanges.size() + " NEW MESSAGE");
+                                            } else {
+                                                btn.setText(tmpChanges.size() + " NEW MESSAGES");
+                                            }
+                                            btn.setOnClickListener(new View.OnClickListener() {
+                                                @Override
+                                                public void onClick(View v) {
+                                                    for (DocumentChange newMessage : tmpChanges) {
+                                                        DropMessage dm = new DropMessage(
+                                                                UUID.fromString(newMessage.getDocument().get("uuid").toString()),
+                                                                Float.valueOf(newMessage.getDocument().get("latitude").toString()),
+                                                                Float.valueOf(newMessage.getDocument().get("longitude").toString()),
+                                                                parseDate(newMessage.getDocument().get("date").toString()),
+                                                                newMessage.getDocument().get("content").toString(),
+                                                                Filter.valueOf(newMessage.getDocument().get("filter").toString()),
+                                                                Double.valueOf(newMessage.getDocument().get("distance").toString()),
+                                                                Double.valueOf(newMessage.getDocument().get("duration").toString()));
+
+                                                        //WE COULD DO THIS BUT DROPMESSAGE WOULD HAVE TO BE SERIALIZABLE
+                                                        //dc.getDocument().toObject(DropMessage.class);
+                                                        boolean isOnMap = false;
+                                                        for (Marker tempMarker : mainFragment.getMarkers()) {
+                                                            if (dm.getDmId().toString().equals(((DropMessage) tempMarker.getTag()).getDmId().toString())) {
+                                                                isOnMap = true;
+                                                                break;
+                                                            }
+                                                        }
+                                                        if (!isOnMap) {
+                                                            Marker marker = mainFragment.getmMap().addMarker(new MarkerOptions()
+                                                                    .position(new LatLng(dm.getLatitude(), dm.getLongitude()))
+                                                                    .title(dm.getFilter().getName()));
+
+                                                            marker.setTag(dm);
+                                                            //marker.setIcon(BitmapDescriptorFactory.defaultMarker(MainFragment.getMarkerColor(dm.getFilter())));
+                                                            Bitmap bitmap = BitmapHelper.getBitmap(context, Filter.chooseMarkerIcon(dm.getFilter().getName()));
+                                                            marker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
+                                                            mainFragment.getMarkers().add(marker);
+                                                        }
+
+                                                    }
+                                                    tmpChanges.clear();
+                                                    v.setVisibility(View.GONE);
+                                                }
+                                            });
+                                            btn.setVisibility(View.VISIBLE);
                                         }
                                         else {
-                                            btn.setText(tmpChanges.size() + " NEW MESSAGES");
+                                            Toast toast = Toast.makeText(context, "Someone dropped a message somewhere!", duration);
+                                            toast.show();
                                         }
-                                        btn.setOnClickListener(new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View v) {
-                                                MainFragment mainFragment = (MainFragment) ((MapsActivity) activity).getSupportFragmentManager().findFragmentByTag("MAP_FRAGMENT");
-                                                for(DocumentChange newMessage : tmpChanges) {
-                                                    DropMessage dm = new DropMessage(
-                                                            UUID.fromString(newMessage.getDocument().get("uuid").toString()),
-                                                            Float.valueOf(newMessage.getDocument().get("latitude").toString()),
-                                                            Float.valueOf(newMessage.getDocument().get("longitude").toString()),
-                                                            parseDate(newMessage.getDocument().get("date").toString()),
-                                                            newMessage.getDocument().get("content").toString(),
-                                                            Filter.valueOf(newMessage.getDocument().get("filter").toString()),
-                                                            Double.valueOf(newMessage.getDocument().get("distance").toString()),
-                                                            Double.valueOf(newMessage.getDocument().get("duration").toString()));
-
-                                                    //WE COULD DO THIS BUT DROPMESSAGE WOULD HAVE TO BE SERIALIZABLE
-                                                    //dc.getDocument().toObject(DropMessage.class);
-                                                    boolean isOnMap = false;
-                                                    for(Marker tempMarker: mainFragment.getMarkers()) {
-                                                        if(dm.getDmId().toString().equals(((DropMessage) tempMarker.getTag()).getDmId().toString())) {
-                                                            isOnMap = true;
-                                                            break;
-                                                        }
-                                                    }
-                                                    if(!isOnMap) {
-                                                        Marker marker = mainFragment.getmMap().addMarker(new MarkerOptions()
-                                                                .position(new LatLng(dm.getLatitude(), dm.getLongitude()))
-                                                                .title(dm.getFilter().getName()));
-
-                                                        marker.setTag(dm);
-                                                        //marker.setIcon(BitmapDescriptorFactory.defaultMarker(MainFragment.getMarkerColor(dm.getFilter())));
-                                                        Bitmap bitmap = BitmapHelper.getBitmap(context, Filter.chooseMarkerIcon(dm.getFilter().getName()));
-                                                        marker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
-                                                        mainFragment.getMarkers().add(marker);
-                                                    }
-
-                                                }
-                                                tmpChanges.clear();
-                                                v.setVisibility(View.GONE);
-                                            }
-                                        });
-                                        btn.setVisibility(View.VISIBLE);
                                         break;
                                     case MODIFIED:
                                         Log.d("FIREBASE_LISTEN_MODIFY", "Modified city: " + dc.getDocument().getData());

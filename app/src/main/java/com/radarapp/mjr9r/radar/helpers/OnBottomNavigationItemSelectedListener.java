@@ -47,6 +47,7 @@ public class OnBottomNavigationItemSelectedListener implements BottomNavigationV
                     ft.show(fm.findFragmentByTag("MAP_FRAGMENT"));
                     ft.hide(currentFragment);
                     ft.commit();
+                    activity.toggleMarkerFilter();
                     break;
                 }
                 //CHECK IF SAME VIEW HAS BEEN CLICKED AGAIN, IF YES, BREAK
@@ -58,6 +59,7 @@ public class OnBottomNavigationItemSelectedListener implements BottomNavigationV
                 ft.show(fm.findFragmentByTag("MAP_FRAGMENT"));
                 ft.hide(currentFragment);
                 ft.commit();
+                activity.toggleMarkerFilter();
                 return true;
             case R.id.bottom_nav_compose:
                 //CHECK IF FRAGMENT HAS BEEN ADDED YET, IF NOT, ADD IT
@@ -100,6 +102,7 @@ public class OnBottomNavigationItemSelectedListener implements BottomNavigationV
                 //HIDE CURRENT FRAGMENT, SHOW FRAGMENT THAT HAS BEEN SELECTED
                 ft = fm.beginTransaction();
                 ft.show(fm.findFragmentByTag("BOOKMARK_FRAGMENT"));
+                activity.refreshAdapterBookmarkFragment();
                 ft.hide(currentFragment);
                 ft.commit();
                 return true;

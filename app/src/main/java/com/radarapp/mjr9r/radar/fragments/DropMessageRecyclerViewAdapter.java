@@ -53,7 +53,7 @@ public class DropMessageRecyclerViewAdapter extends RecyclerView.Adapter<DropMes
                 if (null != mListener) {
                     // Notify the active callbacks interface (the activity, if the
                     // fragment is attached to one) that an item has been selected.
-                    // mListener.onListFragmentInteraction(holder.mItem);
+                    mListener.onListFragmentInteraction(holder.mItem);
                 }
             }
         });
@@ -62,6 +62,10 @@ public class DropMessageRecyclerViewAdapter extends RecyclerView.Adapter<DropMes
     @Override
     public int getItemCount() {
         return mValues.size();
+    }
+
+    public void updateAdapter(List<DropMessage> newdata) {
+        mValues = newdata;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {

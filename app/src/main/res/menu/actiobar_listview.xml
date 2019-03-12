@@ -2,14 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <!-- Settings, should always be in the overflow -->
-    <item
-        android:id="@+id/action_scan"
-        android:icon="@drawable/ic_refresh_black_24dp"
-        android:title="Scan"
-        app:showAsAction="ifRoom"
-        />
-
+    <!-- "Mark Favorite", should appear as action button if possible -->
     <item
         android:id="@+id/action_filter"
         android:icon="@drawable/ic_filter_list_black_24dp"
@@ -17,6 +10,14 @@
         app:showAsAction="ifRoom"
         />
 
+    <item
+        android:id="@+id/action_sort"
+        android:icon="@drawable/ic_sort_black_24dp"
+        android:title="@string/actionbar_filter"
+        app:showAsAction="ifRoom"
+        />
+
+    <!-- Settings, should always be in the overflow -->
     <item android:id="@+id/action_settings"
         android:title="@string/actionbar_settings"
         app:showAsAction="never"/>
