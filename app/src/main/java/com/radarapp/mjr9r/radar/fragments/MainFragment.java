@@ -526,7 +526,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
         Log.v("OHOH", "KLICK AUF MARKER");
 
         mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-        mBottomSheetBehavior.setPeekHeight(300);
+        mBottomSheetBehavior.setPeekHeight(435);
         bottomSheetVisible = true;
 
         //get message associated with marker
@@ -552,14 +552,15 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
         String timeFromNow = TimeAgo.toDuration(new Date().getTime() - dmDate.getTime());
 
         //set bottomview according to marker content
-        TextView filterText = bottomsheet.findViewById(R.id.message_filter);
+        //TextView filterText = bottomsheet.findViewById(R.id.message_filter);
         TextView contentText = bottomsheet.findViewById(R.id.message_content);
         TextView dateText = bottomsheet.findViewById(R.id.message_date);
         ImageView messageIcon = bottomsheet.findViewById(R.id.message_icon);
-        filterText.setText(dmFilter.getName());
+        //filterText.setText(dmFilter.getName());
         contentText.setText(dmContent);
         dateText.setText(timeFromNow);
         messageIcon.setImageResource(dmFilter.getIconID());
+        Log.v("TEXTVIEWHEIGHT", Integer.toString(contentText.getHeight()));
         //messageIcon.setImageBitmap(BitmapFactory.decodeResource(getResources(), dmFilter.getIconID()));
 
         //bottomsheet.setBackgroundColor(Color.parseColor(dmFilter.getColor()));
