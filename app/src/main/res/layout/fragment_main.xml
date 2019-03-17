@@ -46,7 +46,7 @@
                     android:layout_alignParentRight="true"
                     android:layout_marginRight="5dp"
                     android:background="#00000000"
-                    android:src="@drawable/ic_mic" />
+                    android:src="@drawable/ic_photo_camera_black_24dp" />
             </RelativeLayout>
         </android.support.v7.widget.CardView>
 
@@ -93,14 +93,13 @@
     <FrameLayout
         android:id="@+id/bottom_sheet"
         android:layout_width="match_parent"
-        android:layout_height="250dp"
-        android:background="@drawable/rounded_dialog"
+        android:layout_height="180dp"
         android:elevation="16dp"
         android:clipToPadding="true"
 
         app:layout_behavior="android.support.design.widget.BottomSheetBehavior">
 
-        <include layout="@layout/content_location_cardview" />
+        <include layout="@layout/content_location_bottomsheet" />
     </FrameLayout>
 
 
