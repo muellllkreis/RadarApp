@@ -3,6 +3,7 @@ package com.radarapp.mjr9r.radar.model;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 
 import java.util.Date;
@@ -29,6 +30,8 @@ public class DropMessage {
     private long unixTime;
 
     private String uuid;
+
+    private String imageRef;
 
     @Ignore
     public DropMessage(float latitude, float longitude, Date date, String content, Filter filter) {
@@ -71,6 +74,21 @@ public class DropMessage {
         this.distance = distance;
         this.duration = duration;
         this.uuid = uuid;
+    }
+
+    @Ignore
+    public DropMessage(String uuid, float latitude, float longitude, Date date, String content, Filter filter, double distance, double duration, String image) {
+        this.dmId = UUID.fromString(uuid);
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.date = date;
+        this.content = content;
+        this.filter = filter;
+        this.unixTime = date.getTime()/1000;
+        this.distance = distance;
+        this.duration = duration;
+        this.uuid = uuid;
+        this.imageRef = image;
     }
 
     @Override
@@ -156,6 +174,14 @@ public class DropMessage {
 
     public void setUuid(String uuid) {
         this.uuid = uuid;
+    }
+
+    public String getImageRef() {
+        return imageRef;
+    }
+
+    public void setImageRef(String image) {
+        this.imageRef = image;
     }
 
 }

@@ -1,6 +1,7 @@
 package com.radarapp.mjr9r.radar.Database;
 
 import android.arch.persistence.room.TypeConverter;
+import android.net.Uri;
 
 import com.radarapp.mjr9r.radar.model.Filter;
 
@@ -36,5 +37,15 @@ public class Converters {
     @TypeConverter
     public static String fromFilter(Filter filter) {
         return filter == null ? null : filter.getName();
+    }
+
+    @TypeConverter
+    public static String fromUri(Uri uri) {
+        return uri == null ? null : uri.toString();
+    }
+
+    @TypeConverter
+    public static Uri UriFromString(String string) {
+        return string.equals("") ? null : Uri.parse(string);
     }
 }

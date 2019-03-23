@@ -85,5 +85,8 @@
     <string name="default_qd_distance">1000</string>
     <string name="default_qd_duration">60</string>
 
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
 
 </resources>
