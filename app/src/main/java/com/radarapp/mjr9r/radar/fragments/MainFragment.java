@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.location.Location;
 import android.location.LocationManager;
+import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -33,10 +34,12 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -128,6 +131,10 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
     EditText quickdrop;
     ImageButton quickDropBtn;
     ImageButton quickDropPhotoBtn;
+
+    RelativeLayout mainLayout;
+
+    ImageView imagePreview;
 
     public Location lastLocation;
 
@@ -275,38 +282,47 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
+        mainLayout = view.findViewById(R.id.main_layout);
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        //set ImagePreview
+        imagePreview = view.findViewById(R.id.image_preview);
+        imagePreview.setVisibility(View.GONE);
+
+        if(android.os.Build.VERSION.SDK_INT >= 21) {
+            imagePreview.setClipToOutline(true);
+        }
+
         //Floating Action Button
-        fab = view.findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                FragmentManager fm = getActivity().getSupportFragmentManager();
-                FragmentTransaction ft ;
-                if (fm.findFragmentByTag("COMPOSE_FRAGMENT") == null) {
-                    ft = fm.beginTransaction();
-                    ft.add(R.id.container_main, ComposeFragment.newInstance(), "COMPOSE_FRAGMENT").commit();
-                    fm.executePendingTransactions();
-                    ft = fm.beginTransaction();
-                    ft.show(fm.findFragmentByTag("COMPOSE_FRAGMENT"));
-                    ft.hide(fm.findFragmentByTag("MAP_FRAGMENT"));
-                    ft.commit();
-                    ((MapsActivity) getActivity()).getmBottomNavigationView().setSelectedItemId(R.id.bottom_nav_compose);
-                }
-                else {
-                    ft = fm.beginTransaction();
-                    ft.show(fm.findFragmentByTag("COMPOSE_FRAGMENT"));
-                    ft.hide(fm.findFragmentByTag("MAP_FRAGMENT"));
-                    ft.commit();
-                    ((MapsActivity) getActivity()).getmBottomNavigationView().setSelectedItemId(R.id.bottom_nav_compose);
-                }
-            }
-        });
+//        fab = view.findViewById(R.id.fab);
+//        fab.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                FragmentManager fm = getActivity().getSupportFragmentManager();
+//                FragmentTransaction ft ;
+//                if (fm.findFragmentByTag("COMPOSE_FRAGMENT") == null) {
+//                    ft = fm.beginTransaction();
+//                    ft.add(R.id.container_main, ComposeFragment.newInstance(), "COMPOSE_FRAGMENT").commit();
+//                    fm.executePendingTransactions();
+//                    ft = fm.beginTransaction();
+//                    ft.show(fm.findFragmentByTag("COMPOSE_FRAGMENT"));
+//                    ft.hide(fm.findFragmentByTag("MAP_FRAGMENT"));
+//                    ft.commit();
+//                    ((MapsActivity) getActivity()).getmBottomNavigationView().setSelectedItemId(R.id.bottom_nav_compose);
+//                }
+//                else {
+//                    ft = fm.beginTransaction();
+//                    ft.show(fm.findFragmentByTag("COMPOSE_FRAGMENT"));
+//                    ft.hide(fm.findFragmentByTag("MAP_FRAGMENT"));
+//                    ft.commit();
+//                    ((MapsActivity) getActivity()).getmBottomNavigationView().setSelectedItemId(R.id.bottom_nav_compose);
+//                }
+//            }
+//        });
 
 
         //THE FOLLOWING CODE HANDLES QUICKDROP
@@ -569,16 +585,39 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
         TextView contentText = bottomsheet.findViewById(R.id.message_content);
         TextView dateText = bottomsheet.findViewById(R.id.message_date);
         ImageView messageIcon = bottomsheet.findViewById(R.id.message_icon);
-        ImageView messageImg = bottomsheet.findViewById(R.id.message_img);
 
-        String imageRef = dm.getImageRef();
+        final String imageRef = dm.getImageRef();
+        Log.v("IMGTEST", "LOGGING WORKS");
+        Log.v("IMGTEST","imageRef is: " + imageRef);
 
-        if(!(imageRef.equals("") || imageRef == null)) {
-            StorageReference storageRef = mainActivity.getRemoteDb().getReferenceFromUrl(imageRef);
-            Glide.with(this)
-                    .load(storageRef)
-                    .into(messageImg);
+        if(imageRef != null) {
+            if(!imageRef.equals("")) {
+                imagePreview.setVisibility(View.VISIBLE);
+                Log.v("IMGTEST","IMAGEDOWNLOAD STARTING");
+                StorageReference storageRef = mainActivity.getRemoteDb().getReferenceFromUrl(imageRef);
+                Log.v("IMGTEST","StorageRef is: " + storageRef.getPath());
+                Glide.with(this)
+                        .load(imageRef)
+                        .thumbnail(0.1f)
+                        .transition(DrawableTransitionOptions.withCrossFade())
+                        .into(imagePreview);
+                Log.v("IMGTEST","IMAGEDOWNLOAD DONE");
+            }
         }
+
+        imagePreview.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.v("IMGTEST", "CLICK REGISTERED");
+                View imgDetailView;
+                imgDetailView = LayoutInflater.from(getContext()).inflate(R.layout.image_detail,  null);
+                mainLayout.addView(imgDetailView);
+                ImageView imgDetail = imgDetailView.findViewById(R.id.image_detail);
+                Glide.with(getContext())
+                        .load(imageRef)
+                        .into(imgDetail);
+            }
+        });
 
         //filterText.setText(dmFilter.getName());
         contentText.setText(dmContent);
@@ -625,6 +664,9 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
             Bitmap bitmap = BitmapHelper.getBitmap(getContext(), Filter.chooseMarkerIcon(((DropMessage) selectedMarker.getTag()).getFilter().getName()));
             selectedMarker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
             selectedCircle.remove();
+            if(imagePreview.getVisibility() == View.VISIBLE) {
+                imagePreview.setVisibility(View.GONE);
+            }
         }
         //else new quickdrop?
     }

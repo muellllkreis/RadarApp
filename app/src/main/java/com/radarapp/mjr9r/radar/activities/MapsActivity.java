@@ -37,6 +37,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.radarapp.mjr9r.radar.Database.AppDatabase;
@@ -149,6 +150,9 @@ public class MapsActivity extends AppCompatActivity implements BookmarkFragment.
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder().setTimestampsInSnapshotsEnabled(true).build();
+        db.setFirestoreSettings(settings);
 
         //Create bottom navigation
         mBottomNavigationView = findViewById(R.id.bottom_navigation);

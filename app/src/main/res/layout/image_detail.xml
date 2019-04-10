@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:elevation="16dp">
+
+    <ImageView
+        android:id="@+id/cancel_imagedetail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:src="@drawable/ic_cancel_black_24dp"/>
+
+
+
+    <android.support.constraint.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/image_detail"
+            android:rotation="90"
+            android:src="@drawable/placeholder_img"
+            android:background="@drawable/rounded_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="0dp"
+            android:layout_marginStart="0dp"
+            android:layout_marginTop="0dp"
+            android:adjustViewBounds="true"
+            android:cropToPadding="false"
+            app:layout_constraintDimensionRatio="H,4:3"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            />
+
+    </android.support.constraint.ConstraintLayout>
+
+</android.support.constraint.ConstraintLayout>

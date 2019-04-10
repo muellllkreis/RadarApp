@@ -5,6 +5,7 @@ import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import java.util.Date;
 import java.util.UUID;

@@ -20,6 +20,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -78,16 +79,31 @@ public class DataService {
 
                                 //PARSE DATA FROM DATABASE
                                 UUID uuid = UUID.fromString(document.get("uuid").toString());
-                                Date dmDate = parseDate(document.get("date").toString());
+                                Timestamp dmTimestamp = document.getTimestamp("date");
+                                Date dmDate = dmTimestamp.toDate();
+                                //Date dmDate = parseDate(document.get("date").toString());
                                 double dmDuration = Double.valueOf(document.get("duration").toString());
                                 double dmDistance = Double.valueOf(document.get("distance").toString());
                                 Filter dmFilter = Filter.valueOf(document.get("filter").toString());
                                 double dmLatitude = (double) document.get("latitude");
                                 double dmLongitude = (double) document.get("longitude");
                                 String dmContent = document.get("content").toString();
+                                String dmImageRef = document.get("imageRef").toString();
+
+                                Log.v("DEBUGERROR", dmDate.toString());
+                                Log.v("DEBUGERROR", Double.toString(dmDuration));
+                                Log.v("DEBUGERROR", Double.toString(dmDistance));
+                                Log.v("DEBUGERROR", dmFilter.getName());
+                                Log.v("DEBUGERROR", dmContent);
 
                                 //CREATE NEW DROPMESSAGE FROM PARSED DATA
-                                DropMessage dm = new DropMessage(uuid, (float) dmLatitude, (float) dmLongitude, dmDate, dmContent, dmFilter, dmDistance, dmDuration);
+                                DropMessage dm;
+                                if(dmImageRef != null && !dmImageRef.equals("")) {
+                                    dm = new DropMessage(uuid.toString(), (float) dmLatitude, (float) dmLongitude, dmDate, dmContent, dmFilter, dmDistance, dmDuration, dmImageRef);
+                                }
+                                else {
+                                    dm = new DropMessage(uuid, (float) dmLatitude, (float) dmLongitude, dmDate, dmContent, dmFilter, dmDistance, dmDuration);
+                                }
 
                                 //LOCAL CHECK FOR DURATION
                                 //SERVER SIDE CHECK IS PERFORMED EVERY HOUR SO THIS CATCHES MESSAGES EXPIRED IN BETWEEN

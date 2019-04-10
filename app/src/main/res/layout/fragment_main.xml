@@ -6,6 +6,7 @@
     tools:context="com.radarapp.mjr9r.radar.fragments.MainFragment">
 
     <RelativeLayout
+        android:id="@+id/main_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
 
@@ -75,7 +76,7 @@
             android:visibility="gone" />
     </RelativeLayout>
 
-    <android.support.design.widget.FloatingActionButton
+    <!-- <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -83,7 +84,22 @@
         android:layout_margin="20dp"
         android:src="@drawable/ic_mode_edit_black_24dp"
         app:layout_anchor="@id/fab_space"
-        app:layout_anchorGravity="end" />
+        app:layout_anchorGravity="end" /> -->
+
+    <ImageView
+        android:id="@+id/image_preview"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:background="@drawable/image_preview"
+        app:layout_anchor="@id/fab_space"
+        app:layout_anchorGravity="end"
+        android:layout_margin="20dp"
+        android:scaleType="centerCrop"
+        android:rotation="90"
+        android:layout_gravity="top"
+        android:elevation="6dp"
+        android:clickable="true"
+        android:focusable="true"/>
 
     <android.support.v4.widget.Space
         android:id="@+id/fab_space"
