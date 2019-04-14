@@ -3,6 +3,9 @@ package com.radarapp.mjr9r.radar.fragments;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.hardware.Camera;
 import android.media.MediaScannerConnection;
@@ -28,6 +31,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.common.io.Files;
@@ -37,6 +41,7 @@ import com.google.firebase.storage.UploadTask;
 import com.radarapp.mjr9r.radar.R;
 import com.radarapp.mjr9r.radar.activities.MapsActivity;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -226,7 +231,17 @@ public class CameraFragment extends Fragment implements SurfaceHolder.Callback {
                                         return;
                                     }
 
-                                    final UploadTask uploadTask = storageRef.putBytes(data);
+                                    Bitmap bm = BitmapFactory.decodeByteArray(data, 0 , data.length);
+
+                                    Matrix matrix = new Matrix();
+                                    matrix.postRotate(90);
+                                    Bitmap rotatedBitmap = Bitmap.createBitmap(bm, 0, 0, bm.getWidth(), bm.getHeight(), matrix, true);
+
+                                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                                    rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                                    final byte[] rotatedData = stream.toByteArray();
+
+                                    final UploadTask uploadTask = storageRef.putBytes(rotatedData);
                                     uploadTask.addOnFailureListener(new OnFailureListener() {
                                         @Override
                                         public void onFailure(@NonNull Exception e) {
@@ -236,6 +251,7 @@ public class CameraFragment extends Fragment implements SurfaceHolder.Callback {
                                             cleanExit();
                                         }
                                     });
+
                                     uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                                         @Override
                                         public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
@@ -249,7 +265,7 @@ public class CameraFragment extends Fragment implements SurfaceHolder.Callback {
                                                     }
                                                 });
                                                 FileOutputStream fos = new FileOutputStream(pictureFile);
-                                                fos.write(data);
+                                                fos.write(rotatedData);
                                                 fos.close();
                                                 Log.v("UPLOADLOG", "Written to Storage");
                                                 progressDialog.dismiss();

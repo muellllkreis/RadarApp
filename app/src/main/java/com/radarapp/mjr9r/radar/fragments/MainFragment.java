@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomSheetBehavior;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -133,6 +134,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
     ImageButton quickDropPhotoBtn;
 
     RelativeLayout mainLayout;
+    CoordinatorLayout imgContainer;
 
     ImageView imagePreview;
 
@@ -283,6 +285,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
         mainLayout = view.findViewById(R.id.main_layout);
+        imgContainer = view.findViewById(R.id.bottom_sheet_container);
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
@@ -611,8 +614,15 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
                 Log.v("IMGTEST", "CLICK REGISTERED");
                 View imgDetailView;
                 imgDetailView = LayoutInflater.from(getContext()).inflate(R.layout.image_detail,  null);
-                mainLayout.addView(imgDetailView);
+                imgContainer.addView(imgDetailView);
                 ImageView imgDetail = imgDetailView.findViewById(R.id.image_detail);
+
+                if(android.os.Build.VERSION.SDK_INT >= 21) {
+                    imgDetail.setClipToOutline(true);
+                }
+
+                mMap.getUiSettings().setAllGesturesEnabled(false);
+
                 Glide.with(getContext())
                         .load(imageRef)
                         .into(imgDetail);
