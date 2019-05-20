@@ -61,6 +61,7 @@ import com.radarapp.mjr9r.radar.helpers.BitmapHelper;
 import com.radarapp.mjr9r.radar.helpers.CircleAnimator;
 import com.radarapp.mjr9r.radar.helpers.DropAnimator;
 import com.radarapp.mjr9r.radar.helpers.MarkerAnimator;
+import com.radarapp.mjr9r.radar.helpers.TimeLeft;
 import com.radarapp.mjr9r.radar.services.DatabaseWriter;
 import com.radarapp.mjr9r.radar.helpers.TimeAgo;
 import com.radarapp.mjr9r.radar.model.DropMessage;
@@ -137,6 +138,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
     CoordinatorLayout imgContainer;
 
     ImageView imagePreview;
+    View mapOverlay;
 
     public Location lastLocation;
 
@@ -286,6 +288,8 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
         View view = inflater.inflate(R.layout.fragment_main, container, false);
         mainLayout = view.findViewById(R.id.main_layout);
         imgContainer = view.findViewById(R.id.bottom_sheet_container);
+        mapOverlay = view.findViewById(R.id.map_overlay);
+        mapOverlay.setVisibility(View.GONE);
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
@@ -537,7 +541,12 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
         long minutesAgo = ((new Date()).getTime()/1000/60) - ((dm.getDate().getTime()/1000)/60);
         float newAlpha = (float) (minutesAgo/dm.getDuration());
         Log.v("ALPHATEST", Long.toString(minutesAgo) + " " + Double.toString(minutesAgo/dm.getDuration()));
-        marker.setAlpha(1 - newAlpha);
+        if(newAlpha >= 0.9f) {
+            marker.setAlpha(0.1f);
+        }
+        else {
+            marker.setAlpha(1 - newAlpha);
+        }
     }
 
     @Override
@@ -563,8 +572,8 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
 
         //get message associated with marker
         final DropMessage dm = (DropMessage) marker.getTag();
-        Filter dmFilter = dm.getFilter();
-        String dmContent = dm.getContent();
+        final Filter dmFilter = dm.getFilter();
+        final String dmContent = dm.getContent();
         Date dmDate = dm.getDate();
 
         //ADD CIRCLE AROUND MARKER
@@ -583,10 +592,14 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
         //get "xyz seconds/minutes/hours... ago" string
         String timeFromNow = TimeAgo.toDuration(new Date().getTime() - dmDate.getTime());
 
+        //calculates time that is left until message disappears
+        String timeLeft = TimeLeft.toDuration((long) dm.getDuration()*60000 - (new Date().getTime() - dmDate.getTime()));
+
         //set bottomview according to marker content
         //TextView filterText = bottomsheet.findViewById(R.id.message_filter);
         TextView contentText = bottomsheet.findViewById(R.id.message_content);
         TextView dateText = bottomsheet.findViewById(R.id.message_date);
+        TextView remainingTimeText = bottomsheet.findViewById(R.id.message_remainingTime);
         ImageView messageIcon = bottomsheet.findViewById(R.id.message_icon);
 
         final String imageRef = dm.getImageRef();
@@ -612,26 +625,41 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
             @Override
             public void onClick(View view) {
                 Log.v("IMGTEST", "CLICK REGISTERED");
-                View imgDetailView;
+                final View imgDetailView;
                 imgDetailView = LayoutInflater.from(getContext()).inflate(R.layout.image_detail,  null);
                 imgContainer.addView(imgDetailView);
                 ImageView imgDetail = imgDetailView.findViewById(R.id.image_detail);
+                ImageView imgDetailFilter = imgDetailView.findViewById(R.id.img_detail_msg_filter);
+                TextView imgDetailContent = imgDetailView.findViewById(R.id.img_detail_msg_content);
+
+                imgDetailFilter.setImageResource(dmFilter.getIconID());
+                imgDetailContent.setText(dmContent);
 
                 if(android.os.Build.VERSION.SDK_INT >= 21) {
                     imgDetail.setClipToOutline(true);
                 }
 
-                mMap.getUiSettings().setAllGesturesEnabled(false);
+                mapOverlay.setVisibility(View.VISIBLE);
 
                 Glide.with(getContext())
                         .load(imageRef)
                         .into(imgDetail);
+
+                ImageView cancelButton = imgDetailView.findViewById(R.id.cancel_imagedetail);
+                cancelButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        imgDetailView.setVisibility(View.GONE);
+                        mapOverlay.setVisibility(View.GONE);
+                    }
+                });
             }
         });
 
         //filterText.setText(dmFilter.getName());
         contentText.setText(dmContent);
         dateText.setText(timeFromNow);
+        remainingTimeText.setText(timeLeft);
         messageIcon.setImageResource(dmFilter.getIconID());
         Log.v("TEXTVIEWHEIGHT", Integer.toString(contentText.getHeight()));
         //messageIcon.setImageBitmap(BitmapFactory.decodeResource(getResources(), dmFilter.getIconID()));

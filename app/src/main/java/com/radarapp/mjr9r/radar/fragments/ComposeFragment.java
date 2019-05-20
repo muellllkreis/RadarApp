@@ -2,10 +2,16 @@ package com.radarapp.mjr9r.radar.fragments;
 
 
 import android.animation.ObjectAnimator;
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.location.Location;
+import android.media.MediaScannerConnection;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -30,7 +36,11 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.radarapp.mjr9r.radar.R;
 import com.radarapp.mjr9r.radar.activities.MapsActivity;
 import com.radarapp.mjr9r.radar.helpers.BitmapHelper;
@@ -40,11 +50,17 @@ import com.radarapp.mjr9r.radar.helpers.ViewTagHelper;
 import com.radarapp.mjr9r.radar.model.DropMessage;
 import com.radarapp.mjr9r.radar.model.Filter;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+
+import static android.content.ContentValues.TAG;
 
 
 /**
@@ -66,8 +82,32 @@ public class ComposeFragment extends Fragment {
     private EditText contentText;
     private SeekBar distanceBar;
     private SeekBar durationBar;
+    private ImageView attachedIcon;
+    private ImageView deleteIcon;
 
     private MapsActivity mainActivity;
+
+    private byte[] attachedPhoto;
+    private File attachedPhotoLocation;
+    private StorageReference storageReference;
+    public byte[] getAttachedPhoto() {
+        return attachedPhoto;
+    }
+    public void setAttachedPhoto(byte[] attachedPhoto) {
+        this.attachedPhoto = attachedPhoto;
+    }
+    public File getAttachedPhotoLocation() {
+        return attachedPhotoLocation;
+    }
+    public void setAttachedPhotoLocation(File attachedPhotoLocation) {
+        this.attachedPhotoLocation = attachedPhotoLocation;
+    }
+    public StorageReference getStorageReference() {
+        return storageReference;
+    }
+    public void setStorageReference(StorageReference storageReference) {
+        this.storageReference = storageReference;
+    }
 
 
     public ComposeFragment() {
@@ -133,47 +173,22 @@ public class ComposeFragment extends Fragment {
                         @Override
                         public void onSuccess(Location location) {
                             if(location != null) {
-                                //CREATE DROPMESSAGE FROM VIEWS IN FRAGMENT
-                                DropMessage dm = new DropMessage(UUID.randomUUID(),
-                                        (float) location.getLatitude(),
-                                        (float) location.getLongitude(),
-                                        new Date(),
-                                        contentText.getText().toString(),
-                                        Filter.valueOf(currentlySelectedFilter),
-                                        (double) distanceBar.getProgress(),
-                                        (double) durationBar.getProgress());
-
-                                //ADD MARKER TO MAPFRAGMENT
-                                FragmentManager fm = getActivity().getSupportFragmentManager();
-                                MainFragment mainFragment = (MainFragment) fm.findFragmentByTag("MAP_FRAGMENT");
-                                GoogleMap mMap = mainFragment.getmMap();
-
-                                Marker marker = mMap.addMarker(new MarkerOptions()
-                                        .position(new LatLng(dm.getLatitude(), dm.getLongitude()))
-                                        .title(dm.getFilter().getName()));
-
-                                marker.setTag(dm);
-                                DropAnimator.dropPinEffect(marker);
-//                                marker.setIcon(BitmapDescriptorFactory.defaultMarker(MainFragment.getMarkerColor(dm.getFilter())));
-                                Bitmap bitmap = BitmapHelper.getBitmap(getContext(), Filter.chooseMarkerIcon(dm.getFilter().getName()));
-                                marker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
-                                mainFragment.getMarkers().add(marker);
-                                //GO BACK TO MAP FRAGMENT
-                                FragmentTransaction ft = fm.beginTransaction();
-                                ft.show(mainFragment);
-                                ft.hide(fm.findFragmentByTag("MAP_FRAGMENT"));
-                                ft.commit();
-                                fm.executePendingTransactions();
-                                ((MapsActivity) getActivity()).getmBottomNavigationView().setSelectedItemId(R.id.bottom_nav_map);
-
-                                //RESET FILTER AND TEXT VIEWS
-                                contentText.setText("");
-                                deselectAllFilters();
-                                currentlySelectedFilter = "";
-
-                                //WRITE TO DATABASE
-                                DatabaseWriter.storeMessageInDatabase(dm, getActivity(), getContext());
-
+                                DropMessage dm;
+                                if(attachedPhoto == null) {
+                                    //CREATE DROPMESSAGE FROM VIEWS IN FRAGMENT
+                                    dm = new DropMessage(UUID.randomUUID(),
+                                            (float) location.getLatitude(),
+                                            (float) location.getLongitude(),
+                                            new Date(),
+                                            contentText.getText().toString(),
+                                            Filter.valueOf(currentlySelectedFilter),
+                                            (double) distanceBar.getProgress(),
+                                            (double) durationBar.getProgress());
+                                    addToMapAndWriteToDb(dm, location);
+                                }
+                                else {
+                                    composeMessageWithPhoto(location);
+                                }
                             }
                             else {
                                 //SOMETHING BAD HAPPENED HERE
@@ -184,6 +199,11 @@ public class ComposeFragment extends Fragment {
                     //Message error that location is not known
                     return false;
                 }
+                return true;
+            }
+            case R.id.action_photo: {
+                Log.v("MENUCLICK", "CAMERA BUTTON");
+                mainActivity.callCameraFragment(mainActivity.getSupportFragmentManager().findFragmentByTag("COMPOSE_FRAGMENT"));
                 return true;
             }
             case R.id.action_settings: {
@@ -201,6 +221,8 @@ public class ComposeFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_compose, container, false);
 
         contentText = view.findViewById(R.id.content_text);
+        attachedIcon = view.findViewById(R.id.compose_img_icon);
+        deleteIcon = view.findViewById(R.id.compose_delete_img_icon);
 
         View sliderCardView = view.findViewById(R.id.sliders_cardview);
         distanceBar = sliderCardView.findViewById(R.id.distance_slider);
@@ -283,6 +305,33 @@ public class ComposeFragment extends Fragment {
         return view;
     }
 
+    public void showAttachedIcon() {
+        attachedIcon.setVisibility(View.VISIBLE);
+        deleteIcon.setVisibility(View.VISIBLE);
+
+        deleteIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new AlertDialog.Builder(getContext())
+                        .setTitle(R.string.photo_dialog_title)
+                        .setMessage(R.string.photo_dialog_message)
+
+                        .setPositiveButton(R.string.photo_dialog_positive, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                setAttachedPhoto(null);
+                                setAttachedPhotoLocation(null);
+                                setStorageReference(null);
+                                attachedIcon.setVisibility(View.GONE);
+                                deleteIcon.setVisibility(View.GONE);
+                            }
+                        })
+
+                        .setNegativeButton(R.string.photo_dialog_negative, null)
+                        .show();
+            }
+        });
+    }
+
     //GETS ALL ITEMS IN HORIZONTAL SCROLLVIEW AND SETS THE ONCLICKLISTENER FOR THEM
     private void setListenerForFilterViews(View view) {
         HorizontalScrollView scrollView = view.findViewById(R.id.compose_scrollView);
@@ -318,6 +367,111 @@ public class ComposeFragment extends Fragment {
             TextView temp = (TextView) label;
             temp.setTypeface(null, Typeface.NORMAL);
         }
+    }
+
+    private void addToMapAndWriteToDb(DropMessage dm, Location location) {
+        //ADD MARKER TO MAPFRAGMENT
+        FragmentManager fm = getActivity().getSupportFragmentManager();
+        MainFragment mainFragment = (MainFragment) fm.findFragmentByTag("MAP_FRAGMENT");
+        GoogleMap mMap = mainFragment.getmMap();
+
+        Marker marker = mMap.addMarker(new MarkerOptions()
+                .position(new LatLng(dm.getLatitude(), dm.getLongitude()))
+                .title(dm.getFilter().getName()));
+
+        marker.setTag(dm);
+        DropAnimator.dropPinEffect(marker);
+//                                marker.setIcon(BitmapDescriptorFactory.defaultMarker(MainFragment.getMarkerColor(dm.getFilter())));
+        Bitmap bitmap = BitmapHelper.getBitmap(getContext(), Filter.chooseMarkerIcon(dm.getFilter().getName()));
+        marker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
+        mainFragment.getMarkers().add(marker);
+        //GO BACK TO MAP FRAGMENT
+        FragmentTransaction ft = fm.beginTransaction();
+        ft.show(mainFragment);
+        ft.hide(fm.findFragmentByTag("MAP_FRAGMENT"));
+        ft.commit();
+        fm.executePendingTransactions();
+        ((MapsActivity) getActivity()).getmBottomNavigationView().setSelectedItemId(R.id.bottom_nav_map);
+
+        //RESET FILTER AND TEXT VIEWS
+        contentText.setText("");
+        deselectAllFilters();
+        currentlySelectedFilter = "";
+
+        //WRITE TO DATABASE
+        DatabaseWriter.storeMessageInDatabase(dm, getActivity(), getContext());
+    }
+
+    private void composeMessageWithPhoto(final Location location) {
+        //CREATE DROPMESSAGE FROM VIEWS IN FRAGMENT AND WITH THE PHOTO FILE
+        final DropMessage dm = new DropMessage(UUID.randomUUID(),
+                    (float) location.getLatitude(),
+                    (float) location.getLongitude(),
+                    new Date(),
+                    contentText.getText().toString(),
+                    Filter.valueOf(currentlySelectedFilter),
+                    (double) distanceBar.getProgress(),
+                    (double) durationBar.getProgress());
+
+        final ProgressDialog progressDialog = new ProgressDialog(mainActivity);
+        progressDialog.setTitle("Uploading...");
+        progressDialog.show();
+
+        final UploadTask uploadTask = getStorageReference().putBytes(getAttachedPhoto());
+        uploadTask.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast toast = Toast.makeText(getActivity(), "Unable to post, check connection.", Toast.LENGTH_SHORT);
+                toast.show();
+                progressDialog.dismiss();
+            }
+        });
+
+        uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                Log.v("UPLOADLOG", "Upload has succeded");
+                try {
+                    getStorageReference().getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            dm.setImageRef(uri.toString());
+                            addToMapAndWriteToDb(dm, location);
+
+                            //RESET BUFFERED IMG
+                            setAttachedPhoto(null);
+                            setAttachedPhotoLocation(null);
+                            setStorageReference(null);
+                            attachedIcon.setVisibility(View.GONE);
+                            deleteIcon.setVisibility(View.GONE);
+
+                            Log.v("UPLOADLOG", "DOWNLOADLINK: " + uri.toString());
+                        }
+                    });
+                    FileOutputStream fos = new FileOutputStream(getAttachedPhotoLocation());
+                    fos.write(getAttachedPhoto());
+                    fos.close();
+                    Log.v("UPLOADLOG", "Written to Storage");
+                    progressDialog.dismiss();
+                    Log.v("CAMERALOG", "File created under " + getAttachedPhotoLocation().getAbsolutePath());
+                    MediaScannerConnection.scanFile(getContext(), new String[]{getAttachedPhotoLocation().getPath()}, null, null);
+                } catch (FileNotFoundException e) {
+                    Log.v(TAG, e.getMessage());
+                } catch (IOException e) {
+                    Log.v(TAG, e.getMessage());
+                }
+            }
+        });
+
+        uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                double progress = (100.0*taskSnapshot.getBytesTransferred()/taskSnapshot
+                        .getTotalByteCount());
+                progressDialog.setMessage("Uploaded "+(int)progress+"%");
+            }
+        });
+        return;
     }
 }
 

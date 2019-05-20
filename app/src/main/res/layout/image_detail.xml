@@ -22,6 +22,40 @@
         android:background="@drawable/rounded_view"
         />
 
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="10dp">
+
+    <ImageView
+        android:id="@+id/img_detail_msg_filter"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:scaleType="centerInside"
+        android:layout_above="@+id/img_detail_msg_content"
+        android:layout_alignEnd="@+id/img_detail_msg_content"
+        android:layout_alignRight="@id/img_detail_msg_content"
+        android:layout_marginRight="10dp"
+        android:src="@drawable/ic_compose_cute_icon"/>
+
+    <TextView
+        android:id="@+id/img_detail_msg_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="#BB000000"
+        android:textColor="#FFFFFF"
+        android:padding="10dp"
+        android:layout_marginTop="10dp"
+        android:text="Hallo dies ist ein Test"/>
+
+    </RelativeLayout>
+
     <ImageView
         android:id="@+id/cancel_imagedetail"
         android:layout_width="wrap_content"

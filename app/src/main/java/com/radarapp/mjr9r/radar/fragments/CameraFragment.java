@@ -92,7 +92,11 @@ public class CameraFragment extends Fragment implements SurfaceHolder.Callback {
 
             int heightDiff = inflatedLayout.getBottom() - r.bottom;
 
-            int suggestionsBarHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,75,getActivity().getResources().getDisplayMetrics());
+            int suggestionsBarHeight = 0;
+            if(getActivity() != null) {
+                suggestionsBarHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,75,getActivity().getResources().getDisplayMetrics());
+            }
+
 
             if (inflatedLayout.getRootView().getHeight() - (r.bottom - r.top) > 500) {
                 //Log.d("keyboardStatus","opened");
@@ -163,6 +167,7 @@ public class CameraFragment extends Fragment implements SurfaceHolder.Callback {
         tooltip = inflatedLayout.findViewById(R.id.tooltip);
 
         quickdropCameraContent = inflatedLayout.findViewById(R.id.quickdrop_photo_content);
+        quickdropCameraContent.setVisibility(View.GONE);
         sendFab.setVisibility(View.GONE);
 
         this.surfaceView = inflatedLayout.findViewById(R.id.surfaceView);
@@ -216,77 +221,122 @@ public class CameraFragment extends Fragment implements SurfaceHolder.Callback {
                             triggerBtn.setVisibility(View.GONE);
                             tooltip.setVisibility(View.GONE);
 
+                            Log.v("CAMERALOG", caller.getTag());
+
+                            if(caller.getTag().equals("COMPOSE_FRAGMENT")) {
+                                //IF PHOTO WAS IN COMPOSE FRAGMENT:
+                                //TAKE PHOTO
+                                //NO CAPTION
+                                //SAVE IT AND PASS IT TO CALLER FRAGMENT
+                                //UPLOADING HAS TO BE DONE IN CALLER FRAGMENT
+                                Log.v("CAMERALOG", "IN RIGHT STATEMENT");
+                                final File pictureFile = getOutputMediaFile();
+                                final StorageReference storageRef = mainActivity.getRemoteDb().getReference().child("images/" + pictureFile.getName().toString());
+
+                                Log.v("CAMERALOG", "GOT ALL REFERENCES");
+
+                                if (pictureFile == null) {
+                                    Log.v("CAMERALOG", "Error creating output file");
+                                    return;
+                                }
+
+                                Bitmap bm = BitmapFactory.decodeByteArray(data, 0 , data.length);
+
+                                Matrix matrix = new Matrix();
+                                matrix.postRotate(90);
+                                Bitmap rotatedBitmap = Bitmap.createBitmap(bm, 0, 0, bm.getWidth(), bm.getHeight(), matrix, true);
+
+                                Log.v("CAMERALOG", "HANDLED BITMAP");
+
+                                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                                rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                                final byte[] rotatedData = stream.toByteArray();
+
+                                Log.v("CAMERALOG", "HANDLED BYTEARRAY");
+
+                                ComposeFragment composeFragment = (ComposeFragment) caller;
+                                composeFragment.setAttachedPhoto(rotatedData);
+                                composeFragment.setAttachedPhotoLocation(pictureFile);
+                                composeFragment.setStorageReference(storageRef);
+                                composeFragment.showAttachedIcon();
+                                Log.v("CAMERALOG", "ALL DONE, SHOULD RETURN NOW");
+                                cleanExit();
+                                return;
+                            }
+
+                            quickdropCameraContent.setVisibility(View.VISIBLE);
+
                             sendFab.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
-                                    final ProgressDialog progressDialog = new ProgressDialog(mainActivity);
-                                    progressDialog.setTitle("Uploading...");
-                                    progressDialog.show();
+                                        final ProgressDialog progressDialog = new ProgressDialog(mainActivity);
+                                        progressDialog.setTitle("Uploading...");
+                                        progressDialog.show();
 
-                                    final File pictureFile = getOutputMediaFile();
-                                    final StorageReference storageRef = mainActivity.getRemoteDb().getReference().child("images/" + pictureFile.getName().toString());
+                                        final File pictureFile = getOutputMediaFile();
+                                        final StorageReference storageRef = mainActivity.getRemoteDb().getReference().child("images/" + pictureFile.getName().toString());
 
-                                    if (pictureFile == null) {
-                                        Log.v("CAMERALOG", "Error creating output file");
-                                        return;
-                                    }
-
-                                    Bitmap bm = BitmapFactory.decodeByteArray(data, 0 , data.length);
-
-                                    Matrix matrix = new Matrix();
-                                    matrix.postRotate(90);
-                                    Bitmap rotatedBitmap = Bitmap.createBitmap(bm, 0, 0, bm.getWidth(), bm.getHeight(), matrix, true);
-
-                                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                                    rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-                                    final byte[] rotatedData = stream.toByteArray();
-
-                                    final UploadTask uploadTask = storageRef.putBytes(rotatedData);
-                                    uploadTask.addOnFailureListener(new OnFailureListener() {
-                                        @Override
-                                        public void onFailure(@NonNull Exception e) {
-                                            Toast toast = Toast.makeText(getActivity(), "Unable to post, check connection.", Toast.LENGTH_SHORT);
-                                            toast.show();
-                                            progressDialog.dismiss();
-                                            cleanExit();
+                                        if (pictureFile == null) {
+                                            Log.v("CAMERALOG", "Error creating output file");
+                                            return;
                                         }
-                                    });
 
-                                    uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                                        @Override
-                                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                            Log.v("UPLOADLOG", "Upload has succeded");
-                                            try {
-                                                storageRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                                                    @Override
-                                                    public void onSuccess(Uri uri) {
-                                                        mainActivity.submitPhoto(quickdropCameraContent.getText().toString(), uri);
-                                                        Log.v("UPLOADLOG", "DOWNLOADLINK: " + uri.toString());
-                                                    }
-                                                });
-                                                FileOutputStream fos = new FileOutputStream(pictureFile);
-                                                fos.write(rotatedData);
-                                                fos.close();
-                                                Log.v("UPLOADLOG", "Written to Storage");
+                                        Bitmap bm = BitmapFactory.decodeByteArray(data, 0 , data.length);
+
+                                        Matrix matrix = new Matrix();
+                                        matrix.postRotate(90);
+                                        Bitmap rotatedBitmap = Bitmap.createBitmap(bm, 0, 0, bm.getWidth(), bm.getHeight(), matrix, true);
+
+                                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                                        rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                                        final byte[] rotatedData = stream.toByteArray();
+
+                                        final UploadTask uploadTask = storageRef.putBytes(rotatedData);
+                                        uploadTask.addOnFailureListener(new OnFailureListener() {
+                                            @Override
+                                            public void onFailure(@NonNull Exception e) {
+                                                Toast toast = Toast.makeText(getActivity(), "Unable to post, check connection.", Toast.LENGTH_SHORT);
+                                                toast.show();
                                                 progressDialog.dismiss();
-                                                Log.v("CAMERALOG", "File created under " + pictureFile.getAbsolutePath());
-                                                MediaScannerConnection.scanFile(getContext(), new String[]{pictureFile.getPath()}, null, null);
-                                            } catch (FileNotFoundException e) {
-                                                Log.v(TAG, e.getMessage());
-                                            } catch (IOException e) {
-                                                Log.v(TAG, e.getMessage());
+                                                cleanExit();
                                             }
-                                            cleanExit();
-                                        }
-                                    });
-                                    uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
-                                        @Override
-                                        public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                                            double progress = (100.0*taskSnapshot.getBytesTransferred()/taskSnapshot
-                                                    .getTotalByteCount());
-                                            progressDialog.setMessage("Uploaded "+(int)progress+"%");
-                                        }
-                                    });
+                                        });
+
+                                        uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                            @Override
+                                            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                                Log.v("UPLOADLOG", "Upload has succeded");
+                                                try {
+                                                    storageRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                                        @Override
+                                                        public void onSuccess(Uri uri) {
+                                                            mainActivity.submitPhoto(quickdropCameraContent.getText().toString(), uri);
+                                                            Log.v("UPLOADLOG", "DOWNLOADLINK: " + uri.toString());
+                                                        }
+                                                    });
+                                                    FileOutputStream fos = new FileOutputStream(pictureFile);
+                                                    fos.write(rotatedData);
+                                                    fos.close();
+                                                    Log.v("UPLOADLOG", "Written to Storage");
+                                                    progressDialog.dismiss();
+                                                    Log.v("CAMERALOG", "File created under " + pictureFile.getAbsolutePath());
+                                                    MediaScannerConnection.scanFile(getContext(), new String[]{pictureFile.getPath()}, null, null);
+                                                } catch (FileNotFoundException e) {
+                                                    Log.v(TAG, e.getMessage());
+                                                } catch (IOException e) {
+                                                    Log.v(TAG, e.getMessage());
+                                                }
+                                                cleanExit();
+                                            }
+                                        });
+                                        uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                                            @Override
+                                            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                                                double progress = (100.0*taskSnapshot.getBytesTransferred()/taskSnapshot
+                                                        .getTotalByteCount());
+                                                progressDialog.setMessage("Uploaded "+(int)progress+"%");
+                                            }
+                                        });
                                 }
                             });
                         }

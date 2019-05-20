@@ -1,6 +1,8 @@
 package com.radarapp.mjr9r.radar.activities;
 
 import android.Manifest;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.arch.persistence.room.Room;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -9,6 +11,7 @@ import android.hardware.Camera;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.Uri;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
@@ -215,6 +218,17 @@ public class MapsActivity extends AppCompatActivity implements BookmarkFragment.
             }
         };
         r.run();
+
+        //SET UP NOTIFICATION CHANNEL
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = getString(R.string.notification_channel_name);
+            String description = getString(R.string.notification_channel_desc);
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel("RADAR_NOTIFY", name, importance);
+            channel.setDescription(description);
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
     }
 
     private LocationCallback mLocationCallback = new LocationCallback() {
@@ -377,8 +391,10 @@ public class MapsActivity extends AppCompatActivity implements BookmarkFragment.
         Fragment currentFragment = getCurrentFragment();
         FragmentManager fm = getSupportFragmentManager();
         if(camera != null) {
-            camera.stopPreview();
-            camera.release();
+            CameraFragment cf = (CameraFragment) currentFragment;
+            Fragment returnFragment = cf.getCaller();
+            closeCamera(returnFragment);
+            return;
         }
         if(currentFragment.getTag().equals("MAP_FRAGMENT")) {
             //PROBABLY THIS SHOULD CLOSE/HIDE THE APP

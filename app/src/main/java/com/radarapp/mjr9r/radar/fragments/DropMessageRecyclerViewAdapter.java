@@ -47,6 +47,13 @@ public class DropMessageRecyclerViewAdapter extends RecyclerView.Adapter<DropMes
         holder.mFilterView.setText(mValues.get(position).getFilter().getName());
         holder.mIconView.setImageResource(mValues.get(position).getFilter().getIconID());
 
+        if(holder.mItem.getImageRef() != null) {
+            holder.mImageIcon.setVisibility(View.VISIBLE);
+        }
+        else {
+            holder.mImageIcon.setVisibility(View.GONE);
+        }
+
         holder.mView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -74,6 +81,7 @@ public class DropMessageRecyclerViewAdapter extends RecyclerView.Adapter<DropMes
         public final TextView mFilterView;
         public final TextView mContentView;
         public final ImageView mIconView;
+        public final ImageView mImageIcon;
         public DropMessage mItem;
 
         public ViewHolder(View view) {
@@ -83,6 +91,7 @@ public class DropMessageRecyclerViewAdapter extends RecyclerView.Adapter<DropMes
             mContentView = (TextView) view.findViewById(R.id.bookmark_list_content);
             mFilterView = (TextView) view.findViewById(R.id.bookmark_list_filter);
             mIconView = (ImageView) view.findViewById(R.id.bookmark_list_icon);
+            mImageIcon = (ImageView) view.findViewById(R.id.bookmark_list_img_icon);
         }
 
         @Override

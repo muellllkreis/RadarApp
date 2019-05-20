@@ -31,6 +31,7 @@ import com.radarapp.mjr9r.radar.R;
 import com.radarapp.mjr9r.radar.activities.MapsActivity;
 import com.radarapp.mjr9r.radar.fragments.MainFragment;
 import com.radarapp.mjr9r.radar.helpers.BitmapHelper;
+import com.radarapp.mjr9r.radar.helpers.NotificationBuilder;
 import com.radarapp.mjr9r.radar.model.DropMessage;
 import com.radarapp.mjr9r.radar.model.Filter;
 
@@ -88,7 +89,11 @@ public class DataService {
                                 double dmLatitude = (double) document.get("latitude");
                                 double dmLongitude = (double) document.get("longitude");
                                 String dmContent = document.get("content").toString();
-                                String dmImageRef = document.get("imageRef").toString();
+                                String dmImageRef = "";
+                                if(document.get("imageRef") != null) {
+                                    dmImageRef = document.get("imageRef").toString();
+                                }
+
 
                                 Log.v("DEBUGERROR", dmDate.toString());
                                 Log.v("DEBUGERROR", Double.toString(dmDuration));
@@ -194,6 +199,7 @@ public class DataService {
                                         if(mainFragment.MessageIsInVisibleDistance(messagelocation, distance, mainFragment.lastLocation)) {
                                             Toast toast = Toast.makeText(context, "Someone dropped a message nearby!", duration);
                                             toast.show();
+                                            NotificationBuilder.buildNotification(context);
                                             //IF REMOTE CHANGES ARE DETECTED, THIS PART FIRES
                                             //THE REFRESHBUTTON WILL BE VISIBLE
                                             //ONCLICK, THE BUTTON WILL LOOP THROUGH THE MESSAGES AND ADD THEM TO THE MAP
@@ -215,11 +221,16 @@ public class DataService {
                                                                 UUID.fromString(newMessage.getDocument().get("uuid").toString()),
                                                                 Float.valueOf(newMessage.getDocument().get("latitude").toString()),
                                                                 Float.valueOf(newMessage.getDocument().get("longitude").toString()),
-                                                                parseDate(newMessage.getDocument().get("date").toString()),
+                                                                newMessage.getDocument().getTimestamp("date").toDate(),
+                                                                //parseDate(newMessage.getDocument().get("date").toString()),
                                                                 newMessage.getDocument().get("content").toString(),
                                                                 Filter.valueOf(newMessage.getDocument().get("filter").toString()),
                                                                 Double.valueOf(newMessage.getDocument().get("distance").toString()),
                                                                 Double.valueOf(newMessage.getDocument().get("duration").toString()));
+
+                                                        if(newMessage.getDocument().get("imageRef") != null) {
+                                                            dm.setImageRef(newMessage.getDocument().get("imageRef").toString());
+                                                        }
 
                                                         //WE COULD DO THIS BUT DROPMESSAGE WOULD HAVE TO BE SERIALIZABLE
                                                         //dc.getDocument().toObject(DropMessage.class);
