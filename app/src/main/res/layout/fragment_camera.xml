@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".fragments.CameraFragment">
+
+    <SurfaceView
+        android:id="@+id/surfaceView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <EditText
+        android:id="@+id/quickdrop_photo_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minLines="3"
+        android:background="#000000"
+        android:alpha="0.5"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_margin="20dp"
+        android:textColor="@android:color/white"
+        android:padding="5dp"
+        android:textColorHint="@android:color/white"
+        android:hint="Caption your photo..."
+        />
+
+    <View
+        android:id="@+id/photo_trigger"
+        android:background="@drawable/photo_trigger"
+        android:layout_height="50dp"
+        android:layout_width="50dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="10dp"
+        app:layout_constraintBottom_toTopOf="@+id/tooltip"
+        />
+
+    <TextView
+        android:id="@+id/tooltip"
+        android:textColor="@android:color/white"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tap for photo, hold for video"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="25dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        />
+
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/camera_sendphoto"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_send_black_24dp"
+        app:layout_constraintStart_toEndOf="@id/tooltip"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_margin="25dp"/>
+
+</android.support.constraint.ConstraintLayout>

@@ -9,10 +9,13 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.location.Location;
 import android.location.LocationManager;
+import android.media.Image;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomSheetBehavior;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -32,9 +35,12 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -48,12 +54,14 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.storage.StorageReference;
 import com.radarapp.mjr9r.radar.R;
 import com.radarapp.mjr9r.radar.activities.MapsActivity;
 import com.radarapp.mjr9r.radar.helpers.BitmapHelper;
 import com.radarapp.mjr9r.radar.helpers.CircleAnimator;
 import com.radarapp.mjr9r.radar.helpers.DropAnimator;
 import com.radarapp.mjr9r.radar.helpers.MarkerAnimator;
+import com.radarapp.mjr9r.radar.helpers.TimeLeft;
 import com.radarapp.mjr9r.radar.services.DatabaseWriter;
 import com.radarapp.mjr9r.radar.helpers.TimeAgo;
 import com.radarapp.mjr9r.radar.model.DropMessage;
@@ -124,6 +132,13 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
     CardView quickdropView;
     EditText quickdrop;
     ImageButton quickDropBtn;
+    ImageButton quickDropPhotoBtn;
+
+    RelativeLayout mainLayout;
+    CoordinatorLayout imgContainer;
+
+    ImageView imagePreview;
+    View mapOverlay;
 
     public Location lastLocation;
 
@@ -271,44 +286,57 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
+        mainLayout = view.findViewById(R.id.main_layout);
+        imgContainer = view.findViewById(R.id.bottom_sheet_container);
+        mapOverlay = view.findViewById(R.id.map_overlay);
+        mapOverlay.setVisibility(View.GONE);
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        //set ImagePreview
+        imagePreview = view.findViewById(R.id.image_preview);
+        imagePreview.setVisibility(View.GONE);
+
+        if(android.os.Build.VERSION.SDK_INT >= 21) {
+            imagePreview.setClipToOutline(true);
+        }
+
         //Floating Action Button
-        fab = view.findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                FragmentManager fm = getActivity().getSupportFragmentManager();
-                FragmentTransaction ft ;
-                if (fm.findFragmentByTag("COMPOSE_FRAGMENT") == null) {
-                    ft = fm.beginTransaction();
-                    ft.add(R.id.container_main, ComposeFragment.newInstance(), "COMPOSE_FRAGMENT").commit();
-                    fm.executePendingTransactions();
-                    ft = fm.beginTransaction();
-                    ft.show(fm.findFragmentByTag("COMPOSE_FRAGMENT"));
-                    ft.hide(fm.findFragmentByTag("MAP_FRAGMENT"));
-                    ft.commit();
-                    ((MapsActivity) getActivity()).getmBottomNavigationView().setSelectedItemId(R.id.bottom_nav_compose);
-                }
-                else {
-                    ft = fm.beginTransaction();
-                    ft.show(fm.findFragmentByTag("COMPOSE_FRAGMENT"));
-                    ft.hide(fm.findFragmentByTag("MAP_FRAGMENT"));
-                    ft.commit();
-                    ((MapsActivity) getActivity()).getmBottomNavigationView().setSelectedItemId(R.id.bottom_nav_compose);
-                }
-            }
-        });
+//        fab = view.findViewById(R.id.fab);
+//        fab.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                FragmentManager fm = getActivity().getSupportFragmentManager();
+//                FragmentTransaction ft ;
+//                if (fm.findFragmentByTag("COMPOSE_FRAGMENT") == null) {
+//                    ft = fm.beginTransaction();
+//                    ft.add(R.id.container_main, ComposeFragment.newInstance(), "COMPOSE_FRAGMENT").commit();
+//                    fm.executePendingTransactions();
+//                    ft = fm.beginTransaction();
+//                    ft.show(fm.findFragmentByTag("COMPOSE_FRAGMENT"));
+//                    ft.hide(fm.findFragmentByTag("MAP_FRAGMENT"));
+//                    ft.commit();
+//                    ((MapsActivity) getActivity()).getmBottomNavigationView().setSelectedItemId(R.id.bottom_nav_compose);
+//                }
+//                else {
+//                    ft = fm.beginTransaction();
+//                    ft.show(fm.findFragmentByTag("COMPOSE_FRAGMENT"));
+//                    ft.hide(fm.findFragmentByTag("MAP_FRAGMENT"));
+//                    ft.commit();
+//                    ((MapsActivity) getActivity()).getmBottomNavigationView().setSelectedItemId(R.id.bottom_nav_compose);
+//                }
+//            }
+//        });
 
 
         //THE FOLLOWING CODE HANDLES QUICKDROP
         quickdrop = (EditText) view.findViewById(R.id.quickdrop_edit);
         quickDropBtn = view.findViewById(R.id.quickdrop_send);
         quickdropView = view.findViewById(R.id.quickdrop_cardview);
+        quickDropPhotoBtn = view.findViewById(R.id.quickdrop_photo);
 
         //CHECK PREFERENCES SPECIFIED IN SETTINGS TO BUILD VIEW
         if(sharedPreferences.getBoolean(getString(R.string.shared_prefs_qd), true)) {
@@ -335,7 +363,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
                     getActivity().findViewById(R.id.container_main).requestFocus();
 
                     //CREATE MARKER METHOD
-                    quickDropMessage(content);
+                    quickDropMessage(content, null);
                     //DROP IT ON MAP
                 }
         });
@@ -362,6 +390,14 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
             @Override
             public void afterTextChanged(Editable s) {
 
+            }
+        });
+
+        //THIS HANDLES QUICK CAMERA BUTTON
+        quickDropPhotoBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mainActivity.callCameraFragment(mainActivity.getSupportFragmentManager().findFragmentByTag("MAP_FRAGMENT"));
             }
         });
 
@@ -505,7 +541,12 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
         long minutesAgo = ((new Date()).getTime()/1000/60) - ((dm.getDate().getTime()/1000)/60);
         float newAlpha = (float) (minutesAgo/dm.getDuration());
         Log.v("ALPHATEST", Long.toString(minutesAgo) + " " + Double.toString(minutesAgo/dm.getDuration()));
-        marker.setAlpha(1 - newAlpha);
+        if(newAlpha >= 0.9f) {
+            marker.setAlpha(0.1f);
+        }
+        else {
+            marker.setAlpha(1 - newAlpha);
+        }
     }
 
     @Override
@@ -531,8 +572,8 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
 
         //get message associated with marker
         final DropMessage dm = (DropMessage) marker.getTag();
-        Filter dmFilter = dm.getFilter();
-        String dmContent = dm.getContent();
+        final Filter dmFilter = dm.getFilter();
+        final String dmContent = dm.getContent();
         Date dmDate = dm.getDate();
 
         //ADD CIRCLE AROUND MARKER
@@ -551,14 +592,74 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
         //get "xyz seconds/minutes/hours... ago" string
         String timeFromNow = TimeAgo.toDuration(new Date().getTime() - dmDate.getTime());
 
+        //calculates time that is left until message disappears
+        String timeLeft = TimeLeft.toDuration((long) dm.getDuration()*60000 - (new Date().getTime() - dmDate.getTime()));
+
         //set bottomview according to marker content
         //TextView filterText = bottomsheet.findViewById(R.id.message_filter);
         TextView contentText = bottomsheet.findViewById(R.id.message_content);
         TextView dateText = bottomsheet.findViewById(R.id.message_date);
+        TextView remainingTimeText = bottomsheet.findViewById(R.id.message_remainingTime);
         ImageView messageIcon = bottomsheet.findViewById(R.id.message_icon);
+
+        final String imageRef = dm.getImageRef();
+        Log.v("IMGTEST", "LOGGING WORKS");
+        Log.v("IMGTEST","imageRef is: " + imageRef);
+
+        if(imageRef != null) {
+            if(!imageRef.equals("")) {
+                imagePreview.setVisibility(View.VISIBLE);
+                Log.v("IMGTEST","IMAGEDOWNLOAD STARTING");
+                StorageReference storageRef = mainActivity.getRemoteDb().getReferenceFromUrl(imageRef);
+                Log.v("IMGTEST","StorageRef is: " + storageRef.getPath());
+                Glide.with(this)
+                        .load(imageRef)
+                        .thumbnail(0.1f)
+                        .transition(DrawableTransitionOptions.withCrossFade())
+                        .into(imagePreview);
+                Log.v("IMGTEST","IMAGEDOWNLOAD DONE");
+            }
+        }
+
+        imagePreview.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.v("IMGTEST", "CLICK REGISTERED");
+                final View imgDetailView;
+                imgDetailView = LayoutInflater.from(getContext()).inflate(R.layout.image_detail,  null);
+                imgContainer.addView(imgDetailView);
+                ImageView imgDetail = imgDetailView.findViewById(R.id.image_detail);
+                ImageView imgDetailFilter = imgDetailView.findViewById(R.id.img_detail_msg_filter);
+                TextView imgDetailContent = imgDetailView.findViewById(R.id.img_detail_msg_content);
+
+                imgDetailFilter.setImageResource(dmFilter.getIconID());
+                imgDetailContent.setText(dmContent);
+
+                if(android.os.Build.VERSION.SDK_INT >= 21) {
+                    imgDetail.setClipToOutline(true);
+                }
+
+                mapOverlay.setVisibility(View.VISIBLE);
+
+                Glide.with(getContext())
+                        .load(imageRef)
+                        .into(imgDetail);
+
+                ImageView cancelButton = imgDetailView.findViewById(R.id.cancel_imagedetail);
+                cancelButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        imgDetailView.setVisibility(View.GONE);
+                        mapOverlay.setVisibility(View.GONE);
+                    }
+                });
+            }
+        });
+
         //filterText.setText(dmFilter.getName());
         contentText.setText(dmContent);
         dateText.setText(timeFromNow);
+        remainingTimeText.setText(timeLeft);
         messageIcon.setImageResource(dmFilter.getIconID());
         Log.v("TEXTVIEWHEIGHT", Integer.toString(contentText.getHeight()));
         //messageIcon.setImageBitmap(BitmapFactory.decodeResource(getResources(), dmFilter.getIconID()));
@@ -601,6 +702,9 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
             Bitmap bitmap = BitmapHelper.getBitmap(getContext(), Filter.chooseMarkerIcon(((DropMessage) selectedMarker.getTag()).getFilter().getName()));
             selectedMarker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
             selectedCircle.remove();
+            if(imagePreview.getVisibility() == View.VISIBLE) {
+                imagePreview.setVisibility(View.GONE);
+            }
         }
         //else new quickdrop?
     }
@@ -609,7 +713,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
         return Filter.chooseMarkerColor(filter.getName());
     }
 
-    private void quickDropMessage(final String content) {
+    public void quickDropMessage(final String content, final Uri image) {
         if(content.length() == 0) {
             return;
         }
@@ -629,6 +733,10 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
                                         Integer.valueOf(sharedPreferences.getString(getString(R.string.shared_prefs_qd_distance), "1000")),
                                         Integer.valueOf(sharedPreferences.getString(getString(R.string.shared_prefs_qd_duration), "60")));
 
+                                if(image != null) {
+                                    dm.setImageRef(image.toString());
+                                }
+
                                 Marker marker = mMap.addMarker(new MarkerOptions()
                                         .position(new LatLng(dm.getLatitude(), dm.getLongitude()))
                                         .title(dm.getFilter().getName()));
@@ -639,6 +747,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
                                 Bitmap bitmap = BitmapHelper.getBitmap(getContext(), Filter.chooseMarkerIcon(dm.getFilter().getName()));
                                 marker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
                                 getMarkers().add(marker);
+                                centerCameraOnMessage(dm);
                                 //CALL HELPER CLASS TO WRITE TO DB
                                 DatabaseWriter.storeMessageInDatabase(dm, getActivity(), getContext());
                             }

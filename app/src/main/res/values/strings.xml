@@ -56,6 +56,13 @@
     <string name="actionbar_send">Send note</string>
     <string name="actionbar_filter">Filter</string>
     <string name="actionbar_settings">Settings</string>
+    <string name="actionbar_photo">Take photo</string>
+
+    <!-- Delete Photo Dialog Strings -->
+    <string name="photo_dialog_title">Delete attached photo</string>
+    <string name="photo_dialog_message">Are you sure you want to delete the photo for this message?</string>
+    <string name="photo_dialog_positive">YES</string>
+    <string name="photo_dialog_negative">CANCEL</string>
 
     <!-- Filter Dialog Strings -->
     <string name="filter_dialog_title">Filter messages</string>
@@ -81,9 +88,17 @@
     <string name="shared_prefs_qd_distance">com.radarapp.radar.PREFERENCE_QD_DISTANCE</string>
     <string name="shared_prefs_qd_duration">com.radarapp.radar.PREFERENCE_QD_DURATION</string>
 
+    <!-- NOTIFICATIONS -->
+    <string name="notification_channelID">RADAR_NOTIFY</string>
+    <string name="notification_channel_name">DM Notifications</string>
+    <string name="notification_channel_desc">Notifications for messages dropped nearby</string>
+
     <!-- DEFAULT VALUES -->
     <string name="default_qd_distance">1000</string>
     <string name="default_qd_duration">60</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 
 </resources>

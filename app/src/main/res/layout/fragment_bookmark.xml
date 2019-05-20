@@ -58,7 +58,19 @@
                 android:text="Das ist eine relativ lange Nachricht, damit wir sehen können wie viele Zeichen es noch gut aussehen lassen."
                 android:layout_below="@+id/bookmark_list_filter"
                 android:textAppearance="?attr/textAppearanceListItem" />
-        </RelativeLayout>
+
+                <ImageView
+                    android:id="@+id/bookmark_list_img_icon"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_image_black_24dp"
+                    android:layout_toRightOf="@id/bookmark_list_filter"
+                    android:layout_toEndOf="@id/bookmark_list_filter"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginLeft="5dp"
+                    android:layout_marginStart="5dp"
+                    android:visibility="gone"/>
+            </RelativeLayout>
 
         </LinearLayout>
 

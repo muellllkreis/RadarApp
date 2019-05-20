@@ -6,6 +6,7 @@
     tools:context="com.radarapp.mjr9r.radar.fragments.MainFragment">
 
     <RelativeLayout
+        android:id="@+id/main_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
 
@@ -41,6 +42,7 @@
                     android:maxLines="1" />
 
                 <ImageButton
+                    android:id="@+id/quickdrop_photo"
                     android:layout_width="35dp"
                     android:layout_height="35dp"
                     android:layout_alignParentRight="true"
@@ -74,7 +76,7 @@
             android:visibility="gone" />
     </RelativeLayout>
 
-    <android.support.design.widget.FloatingActionButton
+    <!-- <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -82,7 +84,21 @@
         android:layout_margin="20dp"
         android:src="@drawable/ic_mode_edit_black_24dp"
         app:layout_anchor="@id/fab_space"
-        app:layout_anchorGravity="end" />
+        app:layout_anchorGravity="end" /> -->
+
+    <ImageView
+        android:id="@+id/image_preview"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:background="@drawable/image_preview"
+        app:layout_anchor="@id/fab_space"
+        app:layout_anchorGravity="end"
+        android:layout_margin="20dp"
+        android:scaleType="centerCrop"
+        android:layout_gravity="top"
+        android:elevation="6dp"
+        android:clickable="true"
+        android:focusable="true"/>
 
     <android.support.v4.widget.Space
         android:id="@+id/fab_space"
@@ -90,17 +106,32 @@
         android:layout_height="20dp"
         app:layout_anchor="@id/bottom_sheet" />
 
-    <FrameLayout
-        android:id="@+id/bottom_sheet"
+    <android.support.design.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="180dp"
-        android:elevation="16dp"
-        android:clipToPadding="true"
+        android:layout_height="match_parent"
+        android:id="@+id/bottom_sheet_container"
+        android:elevation="16dp">
 
-        app:layout_behavior="android.support.design.widget.BottomSheetBehavior">
+        <FrameLayout
+            android:id="@+id/bottom_sheet"
+            android:layout_width="match_parent"
+            android:layout_height="180dp"
+            android:clipToPadding="true"
 
-        <include layout="@layout/content_location_bottomsheet" />
-    </FrameLayout>
+            app:layout_behavior="android.support.design.widget.BottomSheetBehavior">
 
+            <include layout="@layout/content_location_bottomsheet" />
+        </FrameLayout>
+
+        <View
+            android:id="@+id/map_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/map_overlay"
+            android:clickable="true"
+            android:focusable="true"
+            android:visibility="gone"/>
+
+    </android.support.design.widget.CoordinatorLayout>
 
 </android.support.design.widget.CoordinatorLayout>

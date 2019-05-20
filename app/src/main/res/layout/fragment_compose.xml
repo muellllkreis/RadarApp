@@ -272,6 +272,27 @@
                 android:layout_margin="10dp"
                 android:text="@string/content_headline" />
 
+            <ImageView
+                android:id="@+id/compose_delete_img_icon"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginTop="10dp"
+                android:src="@drawable/ic_delete_black_24dp"
+                android:layout_toLeftOf="@id/compose_img_icon"
+                android:clickable="true"
+                android:focusable="true"
+                android:visibility="gone"/>
+
+            <ImageView
+                android:id="@+id/compose_img_icon"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_image_black_24dp"
+                android:layout_alignParentRight="true"
+                android:layout_margin="10dp"
+                android:visibility="gone"
+                />
+
             <EditText
                 android:id="@+id/content_text"
                 android:layout_width="match_parent"

@@ -9,6 +9,12 @@
         android:title="@string/actionbar_send"
         app:showAsAction="ifRoom"/>
 
+    <item
+        android:id="@+id/action_photo"
+        android:icon="@drawable/ic_camera_alt_black_24dp"
+        android:title="@string/actionbar_photo"
+        app:showAsAction="ifRoom"/>
+
     <!-- Settings, should always be in the overflow -->
     <item android:id="@+id/action_settings"
         android:title="@string/actionbar_settings"
