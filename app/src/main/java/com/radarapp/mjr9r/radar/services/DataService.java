@@ -21,10 +21,12 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.radarapp.mjr9r.radar.R;
@@ -266,10 +268,27 @@ public class DataService {
                                         }
                                         break;
                                     case MODIFIED:
-                                        Log.d("FIREBASE_LISTEN_MODIFY", "Modified city: " + dc.getDocument().getData());
+                                        Log.d("FIREBASE_LISTEN_MODIFY", "Modified data: " + dc.getDocument().getData());
+                                        duration = Toast.LENGTH_SHORT;
+                                        Toast toast = Toast.makeText(context, "A message was modified", duration);
+                                        toast.show();
+
+                                        DropMessage dm = new DropMessage(
+                                                UUID.fromString(dc.getDocument().get("uuid").toString()),
+                                                Float.valueOf(dc.getDocument().get("latitude").toString()),
+                                                Float.valueOf(dc.getDocument().get("longitude").toString()),
+                                                dc.getDocument().getTimestamp("date").toDate(),
+                                                //parseDate(newMessage.getDocument().get("date").toString()),
+                                                dc.getDocument().get("content").toString(),
+                                                Filter.valueOf(dc.getDocument().get("filter").toString()),
+                                                Double.valueOf(dc.getDocument().get("distance").toString()),
+                                                Double.valueOf(dc.getDocument().get("duration").toString()));
+
+                                        UUID modifiedMessageId = dm.getDmId();
+
                                         break;
                                     case REMOVED:
-                                        Log.d("FIREBASE_LISTEN_REMOVE", "Removed city: " + dc.getDocument().getData());
+                                        Log.d("FIREBASE_LISTEN_REMOVE", "Removed data: " + dc.getDocument().getData());
                                         break;
                                 }
                             }
@@ -277,6 +296,19 @@ public class DataService {
                     }
                 });
 
+    }
+
+    public String queryRating(DropMessage dm, Activity activity) {
+        String errorcase = "";
+        db = ((MapsActivity) activity).getDb();
+        db.collection("messages").whereEqualTo("uuid", dm.getUuid()).get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                        String rating = queryDocumentSnapshots.getDocuments().get(0).get("content").toString();
+                    }
+                });
+        return "";
     }
 
     private Date parseDate(String string) {

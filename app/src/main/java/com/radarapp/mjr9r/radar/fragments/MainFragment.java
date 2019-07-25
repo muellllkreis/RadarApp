@@ -886,4 +886,8 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, Google
             quickdropView.setVisibility(View.GONE);
         }
     }
+
+    public void updateMessageLocally(DropMessage modifiedMessage) {
+
+    }
 }

@@ -53,6 +53,7 @@ import com.google.android.gms.location.LocationCallback;
 import com.radarapp.mjr9r.radar.fragments.SettingsFragment;
 import com.radarapp.mjr9r.radar.helpers.OnBottomNavigationItemSelectedListener;
 import com.radarapp.mjr9r.radar.model.DropMessage;
+import android.provider.Settings.Secure;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -129,6 +130,12 @@ public class MapsActivity extends AppCompatActivity implements BookmarkFragment.
     private Camera camera;
 
     private Boolean firstTime = null;
+
+    //DEVICE ID
+    private String deviceId;
+    public String getDeviceId() {
+        return deviceId;
+    }
 
     /**
      * Checks if the user is opening the app for the first time.
@@ -229,6 +236,9 @@ public class MapsActivity extends AppCompatActivity implements BookmarkFragment.
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
         }
+
+        //GET DEVICE ID FOR RATING SYSTEM
+        deviceId = Secure.getString(this.getContentResolver(), Secure.ANDROID_ID);
     }
 
     private LocationCallback mLocationCallback = new LocationCallback() {
